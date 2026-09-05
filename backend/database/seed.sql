@@ -99,3 +99,44 @@ VALUES
 ON DUPLICATE KEY UPDATE
   price             = VALUES(price),
   proration_enabled = VALUES(proration_enabled);
+
+
+-- ============================================================
+-- Phase 10 — Upsell Rules (Task 38 Seed Data)
+-- ============================================================
+-- Example rules:
+-- 1. When customer buys Business Laptop, recommend Premium Support (promoted)
+-- 2. When customer buys Business Laptop, recommend Setup Service
+-- 3. When customer buys Cloud Subscription, recommend Premium Support (promoted)
+
+-- Rule 1: Business Laptop → Premium Support (Priority 1, Promoted)
+INSERT INTO upsell_rules (product_id, suggested_product_id, priority, promoted, min_margin)
+SELECT p1.id, p2.id, 1, TRUE, 1000
+FROM products p1 CROSS JOIN products p2
+WHERE p1.sku = 'LAP-001' AND p2.sku = 'SUP-001'
+ON DUPLICATE KEY UPDATE
+  priority   = VALUES(priority),
+  promoted   = VALUES(promoted),
+  min_margin = VALUES(min_margin);
+
+-- Rule 2: Business Laptop → Setup Service (Priority 2, Not Promoted)
+INSERT INTO upsell_rules (product_id, suggested_product_id, priority, promoted, min_margin)
+SELECT p1.id, p2.id, 2, FALSE, 2000
+FROM products p1 CROSS JOIN products p2
+WHERE p1.sku = 'LAP-001' AND p2.sku = 'SET-001'
+ON DUPLICATE KEY UPDATE
+  priority   = VALUES(priority),
+  promoted   = VALUES(promoted),
+  min_margin = VALUES(min_margin);
+
+-- Rule 3: Cloud Subscription → Premium Support (Priority 1, Promoted)
+INSERT INTO upsell_rules (product_id, suggested_product_id, priority, promoted, min_margin)
+SELECT p1.id, p2.id, 1, TRUE, 1500
+FROM products p1 CROSS JOIN products p2
+WHERE p1.sku = 'CLD-001' AND p2.sku = 'SUP-001'
+ON DUPLICATE KEY UPDATE
+  priority   = VALUES(priority),
+  promoted   = VALUES(promoted),
+  min_margin = VALUES(min_margin);
+
+-- ============================================================

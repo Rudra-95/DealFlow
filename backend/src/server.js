@@ -13,6 +13,7 @@ const fulfillmentRoutes        = require("./routes/fulfillmentRoutes");
 const invoiceRoutes            = require("./routes/invoiceRoutes");
 const subscriptionRoutes       = require("./routes/subscriptionRoutes");
 const customerQuotationRoutes  = require("./routes/customerQuotationRoutes");
+const suggestionRoutes         = require("./routes/suggestionRoutes");
 const authenticateToken        = require("./middleware/authMiddleware");
 const { getMe }                = require("./controllers/authController");
 
@@ -127,6 +128,13 @@ app.use("/api/subscriptions", subscriptionRoutes);
 // POST /api/customer/quotation/negotiate
 // POST /api/customer/quotation/confirm
 app.use("/api/customer", customerQuotationRoutes);
+
+// ─── Phase 10 routes ──────────────────────────────────────────────────────────
+
+// GET  /api/quotations/:id/suggestions (Task 39 - Upsell/Cross-Sell)
+// GET  /api/admin/upsell-rules
+// POST /api/admin/upsell-rules
+app.use("/api/quotations", suggestionRoutes);
 
 // ─── Future route groups (uncomment as phases are completed) ─────────────────
 

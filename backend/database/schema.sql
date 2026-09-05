@@ -320,3 +320,27 @@ CREATE INDEX idx_negotiations_quote ON negotiations(quote_id);
 -- Inventory — queried by product and by warehouse
 CREATE INDEX idx_inventory_product   ON inventory(product_id);
 CREATE INDEX idx_inventory_warehouse ON inventory(warehouse_id);
+
+-- ============================================================
+-- Phase 10 — Upsell/Cross-Sell Rules (Task 38)
+-- ============================================================
+
+-- 17. Upsell Rules
+--     Defines which products should be recommended when a specific product is in the quote
+CREATE TABLE IF NOT EXISTS upsell_rules (
+    id                    INT PRIMARY KEY AUTO_INCREMENT,
+    product_id            INT NOT NULL COMMENT 'Product already in the quote',
+    suggested_product_id  INT NOT NULL COMMENT 'Product to recommend',
+    priority              INT NOT NULL DEFAULT 1 COMMENT 'Lower number = higher priority (1, 2, 3...)',
+    promoted              BOOLEAN DEFAULT FALSE COMMENT 'Whether this is a promoted recommendation',
+    min_margin            DECIMAL(12,2) NOT NULL DEFAULT 0 COMMENT 'Minimum margin required for recommendation',
+    active                BOOLEAN DEFAULT TRUE,
+    created_at            TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (product_id)           REFERENCES products(id) ON DELETE CASCADE,
+    FOREIGN KEY (suggested_product_id) REFERENCES products(id) ON DELETE CASCADE,
+
+    UNIQUE KEY unique_rule (product_id, suggested_product_id),
+    INDEX idx_product_lookup (product_id, active),
+    INDEX idx_priority (priority)
+) COMMENT='Task 38: Upsell and cross-sell recommendation rules';

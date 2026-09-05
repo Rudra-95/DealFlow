@@ -1,23 +1,22 @@
 import {
-  Activity,
-  Boxes,
-  Building2,
-  ChevronRight,
-  FileCheck2,
-  FileText,
-  Grid2X2,
-  Menu,
-  Package,
-  Receipt,
-  Repeat2,
-  Settings2,
-  TrendingUp,
-  X,
+    Activity,
+    Boxes,
+    Building2,
+    ChevronRight,
+    FileCheck2,
+    FileText,
+    Grid2X2,
+    Menu,
+    Package,
+    Receipt,
+    Repeat2,
+    Settings2,
+    TrendingUp,
+    X,
 } from 'lucide-react'
 import { useState } from 'react'
 import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
-import { serviceMode } from '../../api/client'
 import { navGroups } from '../../data'
 import { HelpModal } from './HelpModal'
 import { NotificationDropdown } from './NotificationDropdown'
@@ -165,14 +164,8 @@ export function AppShell() {
           </nav>
         )}
 
-        {/* Sidebar bottom — service status + user */}
+        {/* Sidebar bottom — user */}
         <div className="sidebar-bottom">
-          <div className="service-note">
-            <span className="live-dot" />
-            {serviceMode}
-            <small>Ready for backend connection</small>
-          </div>
-
           {/* User menu — click to sign out */}
           <button
             className="user-menu"

@@ -1,0 +1,5 @@
+import { ChevronRight } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { PageHeader, StatusBadge, Table } from '../components/shared';
+
+export function Subscriptions() { const navigate = useNavigate(); const rows = [['Northstar Labs','Observability Suite','Annual','Sep 18, 2027','$5,400','Active'],['Harbor & Pine','Care Plan','Annual','Oct 02, 2026','$1,200','Active'],['Veridian Health','Observability Suite','Monthly','Sep 12, 2026','$450','Paused']]; return <><PageHeader eyebrow="Operations / Subscriptions" title="Subscriptions" description="Recurring revenue, with the details in view." /><Table><thead><tr><th>Customer</th><th>Plan</th><th>Billing cycle</th><th>Next billing</th><th>MRR</th><th>Status</th><th /></tr></thead><tbody>{rows.map((row) => <tr key={row[0]} onClick={() => navigate('/subscriptions/sub-1')}>{row.slice(0,5).map((cell, index) => <td key={cell}>{index === 0 || index === 4 ? <strong>{cell}</strong> : cell}</td>)}<td><StatusBadge status={row[5]} /></td><td><ChevronRight size={17} /></td></tr>)}</tbody></Table></> }

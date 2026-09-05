@@ -1,0 +1,13 @@
+{
+  "name": "dealflow360-demo",
+  "version": "1.0.0",
+  "description": "Phase 12 - Complete Backend Demo Flow Integration Test",
+  "main": "completeFlow.js",
+  "scripts": {
+    "demo": "node completeFlow.js",
+    "test": "node completeFlow.js"
+  },
+  "dependencies": {
+    "axios": "^1.6.0"
+  }
+}

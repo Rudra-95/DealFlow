@@ -1,5 +1,7 @@
 import { Check, RotateCcw } from 'lucide-react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { adminApi } from '../api/admin'
+import { apiClient } from '../api/client'
 import { Button, PageHeader, StatusBadge } from '../components/shared'
 import { useToast } from '../contexts/ToastContext'
 
@@ -26,6 +28,18 @@ export function AdminRules() {
   const [tiers, setTiers] = useState(DEFAULT_TIERS)
   const [categories, setCategories] = useState(DEFAULT_CATEGORIES)
   const [saving, setSaving] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [loadError, setLoadError] = useState('')
+  const { error: notifyError } = useToast()
+
+  useEffect(() => {
+    if (!apiClient.baseUrl) return
+    setLoading(true)
+    adminApi.getDiscountRules().then((rules) => {
+      setTiers(Object.entries(rules.tierCeilings).map(([tier, value]) => ({ tier, label: 'Customer pricing tier', value: String(value) })))
+      setCategories(Object.entries(rules.categoryCeilings).map(([name, value]) => ({ name, label: 'Product category', value: String(value) })))
+    }).catch(() => setLoadError('Configuration could not be loaded from the backend.')).finally(() => setLoading(false))
+  }, [])
 
   function updateTier(index: number, value: string) {
     setTiers((prev) => prev.map((t, i) => i === index ? { ...t, value } : t))
@@ -42,10 +56,13 @@ export function AdminRules() {
   }
 
   async function handleSave() {
+    if (saving) return
     setSaving(true)
-    await new Promise((r) => setTimeout(r, 800))
-    setSaving(false)
-    success('Discount governance configuration saved. Backend will enforce these rules.')
+    try {
+      if (apiClient.baseUrl) await adminApi.updateDiscountRules({ tierCeilings: Object.fromEntries(tiers.map((item) => [item.tier, Number(item.value)])), categoryCeilings: Object.fromEntries(categories.map((item) => [item.name, Number(item.value)])), approvalRouting: APPROVAL_RULES.map(({ condition, route }) => ({ condition, route })) })
+      success(apiClient.baseUrl ? 'Discount governance saved.' : 'Configuration saved in demo mode.')
+    } catch { notifyError('Configuration could not be saved. Please try again.') }
+    finally { setSaving(false) }
   }
 
   return (
@@ -59,13 +76,14 @@ export function AdminRules() {
             <Button variant="secondary" icon={<RotateCcw size={14} />} onClick={handleReset}>
               Reset defaults
             </Button>
-            <Button icon={<Check size={16} />} onClick={handleSave}>
-              {saving ? 'Saving…' : 'Save configuration'}
+            <Button icon={<Check size={16} />} onClick={handleSave} disabled={saving || loading}>
+              {loading ? 'Loading…' : saving ? 'Saving…' : 'Save configuration'}
             </Button>
           </div>
         }
       />
 
+      {loadError && <div className="dashboard-state dashboard-error">{loadError}</div>}
       <form onSubmit={(e) => { e.preventDefault(); void handleSave() }}>
         <div className="config-grid">
           <section className="panel config-panel">

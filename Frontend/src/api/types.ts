@@ -17,3 +17,56 @@ export interface NegotiationPayload { message: string; lineId?: string; requeste
 export interface DiscountRules { tierCeilings: Record<string, number>; categoryCeilings: Record<string, number>; approvalRouting: Array<{ condition: string; route: string }> }
 
 export type ApiQuote = Quote
+
+export interface BillingItem {
+  name: string
+  detail: string
+  amount: number
+}
+
+export interface InvoiceDetailData {
+  id: string
+  number: string
+  customer: string
+  status: string
+  issued: string
+  due: string
+  terms: string
+  total: number
+  paymentStatus: string
+  lines: BillingItem[]
+}
+
+export interface SubscriptionDetailData {
+  id: string
+  number: string
+  customer: string
+  status: string
+  started: string
+  nextBilling: string
+  recurring: BillingItem[]
+  oneTime: BillingItem[]
+}
+
+export interface DealHealthIssue {
+  id: string
+  deal: string
+  quoteId: string
+  problem: string
+  detail: string
+  date: string
+  severity: 'Critical' | 'High' | 'Medium' | 'Low'
+  type: string
+}
+
+export interface ReportsData {
+  quotesCreated: string
+  quotesCreatedDetail: string
+  avgApprovalTime: string
+  avgApprovalTimeDetail: string
+  topUpsell: string
+  topUpsellDetail: string
+  winRate: string
+  winRateDetail: string
+  quoteVelocity: Array<{ w: string; created: number; approved: number }>
+}

@@ -421,6 +421,17 @@ body,
   font-size: 11px;
 }
 .manual-split-form .button { width: 100%; margin-top: 3px; }
+.quote-edit-input {
+  width: 58px;
+  padding: 5px 6px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  color: var(--ink);
+  background: #fffdfa;
+  font-size: 11px;
+  text-align: right;
+}
+.quote-edit-input:focus { border-color: #8b82e8; outline: 0; box-shadow: 0 0 0 3px rgba(81, 70, 216, 0.12); }
 
 /* ── Final atmospheric canvas and icon contrast ─────────────
    Deliberately opaque surfaces keep the shell crisp instead of glassy. */
@@ -647,6 +658,12 @@ body,
 
 /* ── Button primary explicit ─────────────── */
 .button-primary { background: var(--blue); color: white; }
+.button:disabled,
+.quote-edit-input:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  pointer-events: none;
+}
 .nav-count-alert { background: #ffe4e1; color: #c05050; }
 
 /* ── Responsive v2 ────────────────────────── */

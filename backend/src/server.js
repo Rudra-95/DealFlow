@@ -3,17 +3,18 @@ const cors    = require("cors");
 const path    = require("path");
 require("dotenv").config({ path: path.resolve(__dirname, "../../.env") });
 
-const pool                = require("./config/db");
-const authRoutes          = require("./routes/authRoutes");
-const productRoutes       = require("./routes/productRoutes");
-const discountRuleRoutes  = require("./routes/discountRuleRoutes");
-const quoteRoutes         = require("./routes/quoteRoutes");
-const approvalRoutes      = require("./routes/approvalRoutes");
-const fulfillmentRoutes   = require("./routes/fulfillmentRoutes");
-const invoiceRoutes       = require("./routes/invoiceRoutes");
-const subscriptionRoutes  = require("./routes/subscriptionRoutes");
-const authenticateToken   = require("./middleware/authMiddleware");
-const { getMe }           = require("./controllers/authController");
+const pool                     = require("./config/db");
+const authRoutes               = require("./routes/authRoutes");
+const productRoutes            = require("./routes/productRoutes");
+const discountRuleRoutes       = require("./routes/discountRuleRoutes");
+const quoteRoutes              = require("./routes/quoteRoutes");
+const approvalRoutes           = require("./routes/approvalRoutes");
+const fulfillmentRoutes        = require("./routes/fulfillmentRoutes");
+const invoiceRoutes            = require("./routes/invoiceRoutes");
+const subscriptionRoutes       = require("./routes/subscriptionRoutes");
+const customerQuotationRoutes  = require("./routes/customerQuotationRoutes");
+const authenticateToken        = require("./middleware/authMiddleware");
+const { getMe }                = require("./controllers/authController");
 
 const app  = express();
 const PORT = process.env.PORT || 5000;
@@ -120,11 +121,14 @@ app.use("/api/invoices", invoiceRoutes);
 // PUT  /api/subscriptions/:id
 app.use("/api/subscriptions", subscriptionRoutes);
 
+// ─── Phase 9 routes ───────────────────────────────────────────────────────────
+
+// GET  /api/customer/quotation
+// POST /api/customer/quotation/negotiate
+// POST /api/customer/quotation/confirm
+app.use("/api/customer", customerQuotationRoutes);
+
 // ─── Future route groups (uncomment as phases are completed) ─────────────────
-// app.use("/api/deal-health",         dealHealthRoutes);
-// app.use("/api/reports",             reportRoutes);
-// app.use("/api/customer/quotation",  customerRoutes);
-// app.use("/api/dashboard",           dashboardRoutes);
 
 // ─── 404 handler ─────────────────────────────────────────────────────────────
 app.use((req, res) => {

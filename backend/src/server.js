@@ -1,15 +1,17 @@
 const express = require("express");
 const cors    = require("cors");
-require("dotenv").config();
+const path    = require("path");
+require("dotenv").config({ path: path.resolve(__dirname, "../../.env") });
 
-const pool               = require("./config/db");
-const authRoutes         = require("./routes/authRoutes");
-const productRoutes      = require("./routes/productRoutes");
-const discountRuleRoutes = require("./routes/discountRuleRoutes");
-const quoteRoutes        = require("./routes/quoteRoutes");
-const approvalRoutes     = require("./routes/approvalRoutes");
-const authenticateToken  = require("./middleware/authMiddleware");
-const { getMe }          = require("./controllers/authController");
+const pool                = require("./config/db");
+const authRoutes          = require("./routes/authRoutes");
+const productRoutes       = require("./routes/productRoutes");
+const discountRuleRoutes  = require("./routes/discountRuleRoutes");
+const quoteRoutes         = require("./routes/quoteRoutes");
+const approvalRoutes      = require("./routes/approvalRoutes");
+const fulfillmentRoutes   = require("./routes/fulfillmentRoutes");
+const authenticateToken   = require("./middleware/authMiddleware");
+const { getMe }           = require("./controllers/authController");
 
 const app  = express();
 const PORT = process.env.PORT || 5000;
@@ -39,6 +41,37 @@ app.get("/api/health", async (req, res) => {
   }
 });
 
+// ─── Shared-contract test endpoints ──────────────────────────────────────────
+
+// GET /api/test/db  — confirms database connection is alive
+app.get("/api/test/db", async (req, res) => {
+  try {
+    const [rows] = await pool.query("SELECT 1 AS connected, NOW() AS server_time");
+    res.json({
+      success: true,
+      message: "Database connection successful",
+      data: rows[0],
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Database connection failed",
+      error: error.message,
+    });
+  }
+});
+
+// GET /api/test/server  — confirms express server is alive (no DB required)
+app.get("/api/test/server", (req, res) => {
+  res.json({
+    success: true,
+    message: "DealFlow360 server is running",
+    environment: process.env.NODE_ENV || "development",
+    port: process.env.PORT || 5000,
+    timestamp: new Date().toISOString(),
+  });
+});
+
 // Auth: POST /api/auth/register  &  POST /api/auth/login
 app.use("/api/auth", authRoutes);
 
@@ -65,9 +98,15 @@ app.use("/api/quotes", quoteRoutes);
 // GET /api/approvals/pending  (Manager / Finance queue)
 app.use("/api/approvals", approvalRoutes);
 
+// ─── Phase 7 routes ───────────────────────────────────────────────────────────
+
+// GET  /api/quotations/:id/fulfillment-suggestion
+// GET  /api/quotations/:id/fulfillment
+// POST /api/quotations/:id/fulfillment/accept
+// POST /api/quotations/:id/fulfillment/override
+app.use("/api/quotations", fulfillmentRoutes);
+
 // ─── Future route groups (uncomment as phases are completed) ─────────────────
-// app.use("/api/fulfillment",         fulfillmentRoutes);
-// app.use("/api/fulfillment",         fulfillmentRoutes);
 // app.use("/api/subscriptions",       subscriptionRoutes);
 // app.use("/api/invoices",            invoiceRoutes);
 // app.use("/api/deal-health",         dealHealthRoutes);

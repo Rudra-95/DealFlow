@@ -60,17 +60,21 @@ const DEMO_USERS: Record<string, AuthUser & { password: string }> = {
 
 const AUTH_STORAGE_KEY = 'df360_auth_user'
 
+function readStoredUser(): AuthUser | null {
+  if (window.location.pathname !== '/' && window.location.hash === '') return null
+
+  try {
+    const stored = localStorage.getItem(AUTH_STORAGE_KEY)
+    return stored ? (JSON.parse(stored) as AuthUser) : null
+  } catch {
+    return null
+  }
+}
+
 const AuthContext = createContext<AuthContextValue | null>(null)
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<AuthUser | null>(() => {
-    try {
-      const stored = localStorage.getItem(AUTH_STORAGE_KEY)
-      return stored ? (JSON.parse(stored) as AuthUser) : null
-    } catch {
-      return null
-    }
-  })
+  const [user, setUser] = useState<AuthUser | null>(readStoredUser)
 
   useEffect(() => {
     if (user) {

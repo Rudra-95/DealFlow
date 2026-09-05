@@ -4,7 +4,9 @@ const {
   getQuoteById,
   updateQuote,
   submitQuote,
+  confirmQuote,
 } = require("../services/quoteService");
+const { processHybridBilling } = require("../services/billingService");
 
 // ─── POST /api/quotes ─────────────────────────────────────────────────────────
 async function createQuoteHandler(req, res) {
@@ -108,4 +110,40 @@ async function submitQuoteHandler(req, res) {
   }
 }
 
-module.exports = { createQuoteHandler, getQuotesHandler, getQuoteHandler, updateQuoteHandler, submitQuoteHandler };
+// ─── POST /api/quotations/:id/confirm ──────────────────────────────────────────
+// Phase 8 Task 29 — Confirm an APPROVED quote and trigger hybrid billing.
+async function confirmQuoteHandler(req, res) {
+  const id = parseInt(req.params.id, 10);
+  if (!Number.isInteger(id) || id <= 0) {
+    return res.status(400).json({ success: false, message: "Invalid quotation ID" });
+  }
+
+  try {
+    // Step 1: Confirm the quote (APPROVED → CONFIRMED)
+    const quote = await confirmQuote(id, req.user.id);
+
+    // Step 2: Process hybrid billing (create invoices + subscriptions)
+    const billingResult = await processHybridBilling(id);
+
+    return res.status(200).json({
+      success: true,
+      message: "Quote confirmed and billing processed",
+      quote,
+      billing: billingResult,
+    });
+  } catch (err) {
+    return res.status(err.status || 500).json({
+      success: false,
+      message: err.message || "Failed to confirm quote",
+    });
+  }
+}
+
+module.exports = {
+  createQuoteHandler,
+  getQuotesHandler,
+  getQuoteHandler,
+  updateQuoteHandler,
+  submitQuoteHandler,
+  confirmQuoteHandler,
+};

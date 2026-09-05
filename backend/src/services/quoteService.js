@@ -1,6 +1,7 @@
-const pool                 = require("../config/db");
-const { getCustomerById }  = require("./customerService");
-const { getProductWithCost } = require("./productService");
+const pool                    = require("../config/db");
+const { getCustomerById }     = require("./customerService");
+const { getProductWithCost }  = require("./productService");
+const { analyzeQuoteDiscounts } = require("./discountService");
 
 // ─── Pure line calculation (no I/O) ──────────────────────────────────────────
 // All values come from the database — never from frontend input.
@@ -220,12 +221,15 @@ async function addQuoteLine(quoteId, { product_id, quantity, discount_percent = 
 
     await recalculateQuote(conn, quoteId);
     await conn.commit();
-    return getQuoteById(quoteId);
   } catch (err) {
     await conn.rollback(); throw err;
   } finally {
-    conn.release();
+    conn.release(); // free connection before risk analysis runs
   }
+
+  // Phase 5: re-evaluate discount governance + update risk_score
+  await analyzeQuoteDiscounts(quoteId);
+  return getQuoteById(quoteId);
 }
 
 // ─── UPDATE LINE ──────────────────────────────────────────────────────────────
@@ -263,12 +267,14 @@ async function updateQuoteLine(quoteId, lineId, { quantity, discount_percent }) 
 
     await recalculateQuote(conn, quoteId);
     await conn.commit();
-    return getQuoteById(quoteId);
   } catch (err) {
     await conn.rollback(); throw err;
   } finally {
     conn.release();
   }
+
+  await analyzeQuoteDiscounts(quoteId);
+  return getQuoteById(quoteId);
 }
 
 // ─── DELETE LINE ──────────────────────────────────────────────────────────────
@@ -288,14 +294,16 @@ async function deleteQuoteLine(quoteId, lineId) {
   try {
     await conn.beginTransaction();
     await conn.query("DELETE FROM quote_lines WHERE id = ?", [lineId]);
-    await recalculateQuote(conn, quoteId); // zeroes out totals if no lines remain
+    await recalculateQuote(conn, quoteId);
     await conn.commit();
-    return getQuoteById(quoteId);
   } catch (err) {
     await conn.rollback(); throw err;
   } finally {
     conn.release();
   }
+
+  await analyzeQuoteDiscounts(quoteId);
+  return getQuoteById(quoteId);
 }
 
 module.exports = {

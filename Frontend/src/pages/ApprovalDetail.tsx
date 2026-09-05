@@ -1,10 +1,13 @@
 import { AlertCircle, Check, MessageSquare } from 'lucide-react'
-import { useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { ConfirmDialog } from '../components/ui/ConfirmDialog'
+import { approvalsApi } from '../api/approvals'
+import { apiClient } from '../api/client'
+import { mapQuote } from '../api/map'
 import { Back, Button, PageHeader, StatusBadge, WorkflowStep } from '../components/shared'
-import { quotes } from '../data'
+import { ConfirmDialog } from '../components/ui/ConfirmDialog'
 import { useToast } from '../contexts/ToastContext'
+import { quotes } from '../data'
 import { money } from '../utils/format'
 
 const AUDIT_TRAIL = [
@@ -16,30 +19,73 @@ const AUDIT_TRAIL = [
 export function ApprovalDetail() {
   const { id = 'q-1048' } = useParams()
   const navigate = useNavigate()
-  const { success, error: toastError, warn } = useToast()
-  const quote = quotes.find((item) => item.id === id) ?? quotes[0]
+  const { success, warn, error: notifyError } = useToast()
+  const fallback = useMemo(() => quotes.find((item) => item.id === id) ?? quotes[0], [id])
+  const [quote, setQuote] = useState(fallback)
+  const [loadedId, setLoadedId] = useState(id)
 
-  const [decision, setDecision] = useState<'Pending' | 'Approved' | 'Returned' | 'Rejected'>('Pending')
+  const [decision, setDecision] = useState<'Pending' | 'Approved' | 'Returned' | 'Rejected'>(
+    fallback.status === 'Approved' || fallback.status === 'Returned' || fallback.status === 'Rejected' ? fallback.status : 'Pending',
+  )
   const [note, setNote] = useState('')
   const [showRejectConfirm, setShowRejectConfirm] = useState(false)
+  const [processing, setProcessing] = useState(false)
 
-  function handleApprove() {
-    setDecision('Approved')
-    success('Quote approved and routed to Finance for final confirmation.')
-    setTimeout(() => navigate('/approvals'), 1800)
+  if (loadedId !== id) {
+    setQuote(fallback)
+    setLoadedId(id)
+    setDecision(fallback.status === 'Approved' || fallback.status === 'Returned' || fallback.status === 'Rejected' ? fallback.status : 'Pending')
   }
 
-  function handleReturn() {
-    setDecision('Returned')
-    warn('Quote returned to sales rep for revision.')
-    setTimeout(() => navigate('/approvals'), 1500)
+  useEffect(() => {
+    if (!apiClient.baseUrl) return
+    approvalsApi.get(id).then((remote) => {
+      const mapped = mapQuote(remote, fallback)
+      setQuote(mapped)
+      if (mapped.status === 'Approved' || mapped.status === 'Returned' || mapped.status === 'Rejected') {
+        setDecision(mapped.status)
+      }
+    }).catch(() => undefined)
+  }, [id, fallback])
+
+  async function handleApprove() {
+    if (processing || decision !== 'Pending') return
+    setProcessing(true)
+    try {
+      if (apiClient.baseUrl) await approvalsApi.approve(id, { note: note || undefined })
+      setDecision('Approved')
+      success(apiClient.baseUrl ? 'Quote approved and routed to Finance.' : 'Quote approved in demo mode.')
+      setTimeout(() => navigate('/approvals'), 1800)
+    } catch {
+      notifyError('We could not approve this quote. Please try again.')
+    } finally { setProcessing(false) }
   }
 
-  function handleReject() {
+  async function handleReturn() {
+    if (processing || decision !== 'Pending') return
+    setProcessing(true)
+    try {
+      if (apiClient.baseUrl) await approvalsApi.returnForRevision(id, { note: note || undefined })
+      setDecision('Returned')
+      warn(apiClient.baseUrl ? 'Quote returned to sales rep for revision.' : 'Quote returned in demo mode.')
+      setTimeout(() => navigate('/approvals'), 1500)
+    } catch {
+      notifyError('We could not return this quote. Please try again.')
+    } finally { setProcessing(false) }
+  }
+
+  async function handleReject() {
+    if (processing || decision !== 'Pending') return
+    setProcessing(true)
     setShowRejectConfirm(false)
-    setDecision('Rejected')
-    toastError('Quote rejected. Sales rep has been notified.')
-    setTimeout(() => navigate('/approvals'), 1500)
+    try {
+      if (apiClient.baseUrl) await approvalsApi.reject(id, { note: note || undefined })
+      setDecision('Rejected')
+      notifyError(apiClient.baseUrl ? 'Quote rejected. Sales rep has been notified.' : 'Quote rejected in demo mode.')
+      setTimeout(() => navigate('/approvals'), 1500)
+    } catch {
+      notifyError('We could not reject this quote. Please try again.')
+    } finally { setProcessing(false) }
   }
 
   const hasOverLimit = quote.lines.some((l) => l.discount > l.maxDiscount)
@@ -163,14 +209,14 @@ export function ApprovalDetail() {
           </label>
 
           <div className="decision-actions">
-            <Button icon={<Check size={16} />} onClick={handleApprove}>
-              Approve & route
+            <Button icon={<Check size={16} />} onClick={handleApprove} disabled={processing || decision !== 'Pending'}>
+              {processing ? 'Processing…' : 'Approve & route'}
             </Button>
-            <Button variant="secondary" onClick={handleReturn}>
-              Return for revision
+            <Button variant="secondary" onClick={handleReturn} disabled={processing || decision !== 'Pending'}>
+              {processing ? 'Processing…' : 'Return for revision'}
             </Button>
-            <Button variant="danger" onClick={() => setShowRejectConfirm(true)}>
-              Reject quote
+            <Button variant="danger" onClick={() => setShowRejectConfirm(true)} disabled={processing || decision !== 'Pending'}>
+              {processing ? 'Processing…' : 'Reject quote'}
             </Button>
           </div>
         </aside>

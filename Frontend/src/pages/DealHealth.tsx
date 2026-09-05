@@ -1,16 +1,20 @@
 import { Bell, Link, TrendingDown, TrendingUp, TriangleAlert, Zap } from 'lucide-react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { apiClient } from '../api/client'
+import { dealHealthApi } from '../api/dealHealth'
+import { mapDealHealthIssues } from '../api/map'
+import type { DealHealthIssue } from '../api/types'
 import { Button, PageHeader, StatusBadge } from '../components/shared'
 import { useToast } from '../contexts/ToastContext'
 
 type Severity = 'Critical' | 'High' | 'Medium' | 'Low'
 
-const ISSUES = [
-  { deal: 'Northstar Labs', quoteId: 'q-1048', problem: 'Discount anomaly', detail: '6% above Gold tier ceiling — director approval required', date: 'Today', severity: 'Critical' as Severity, type: 'discount' },
-  { deal: 'Veridian Health', quoteId: 'q-1046', problem: 'Stalled deal', detail: 'No customer activity in 9 days. Champion may have gone quiet.', date: 'Yesterday', severity: 'High' as Severity, type: 'stalled' },
-  { deal: 'Tandem Retail', quoteId: 'q-1045', problem: 'Delivery slippage', detail: 'Requested delivery date has moved twice in the last 10 days.', date: 'Sep 03', severity: 'Medium' as Severity, type: 'delivery' },
-  { deal: 'Atlas Freight', quoteId: 'q-1044', problem: 'Stalled deal', detail: 'Champion contact has gone quiet. No response to 2 follow-ups.', date: 'Sep 01', severity: 'Low' as Severity, type: 'stalled' },
+const ISSUES: DealHealthIssue[] = [
+  { id: 'q-1048', deal: 'Northstar Labs', quoteId: 'q-1048', problem: 'Discount anomaly', detail: '6% above Gold tier ceiling — director approval required', date: 'Today', severity: 'Critical', type: 'discount' },
+  { id: 'q-1046', deal: 'Veridian Health', quoteId: 'q-1046', problem: 'Stalled deal', detail: 'No customer activity in 9 days. Champion may have gone quiet.', date: 'Yesterday', severity: 'High', type: 'stalled' },
+  { id: 'q-1045', deal: 'Tandem Retail', quoteId: 'q-1045', problem: 'Delivery slippage', detail: 'Requested delivery date has moved twice in the last 10 days.', date: 'Sep 03', severity: 'Medium', type: 'delivery' },
+  { id: 'q-1044', deal: 'Atlas Freight', quoteId: 'q-1044', problem: 'Stalled deal', detail: 'Champion contact has gone quiet. No response to 2 follow-ups.', date: 'Sep 01', severity: 'Low', type: 'stalled' },
 ]
 
 const problemIcons = {
@@ -29,21 +33,34 @@ const SEVERITY_FILTERS: Array<{ label: string; value: Severity | 'All' }> = [
 
 export function DealHealth() {
   const [severityFilter, setSeverityFilter] = useState<Severity | 'All'>('All')
-  const { success, info } = useToast()
+  const [issues, setIssues] = useState(ISSUES)
+  const { success, info, error } = useToast()
   const navigate = useNavigate()
 
-  const filtered = ISSUES.filter((i) => severityFilter === 'All' || i.severity === severityFilter)
+  useEffect(() => {
+    if (!apiClient.baseUrl) return
+    dealHealthApi.list().then((remote) => setIssues(mapDealHealthIssues(remote, ISSUES))).catch(() => undefined)
+  }, [])
 
-  function handleNudge(deal: string) {
-    success(`Nudge sent to sales rep for ${deal}. They'll receive an email alert.`)
+  const filtered = issues.filter((i) => severityFilter === 'All' || i.severity === severityFilter)
+
+  async function handleNudge(issue: DealHealthIssue) {
+    try {
+      if (apiClient.baseUrl) await dealHealthApi.nudge(issue.id || issue.quoteId)
+      success(apiClient.baseUrl ? `Nudge sent for ${issue.deal}.` : `Nudge saved in demo mode for ${issue.deal}.`)
+    } catch { error(`We could not nudge ${issue.deal}. Please try again.`) }
   }
 
-  function handleEscalate(deal: string) {
-    info(`${deal} escalated to Sales Manager for immediate review.`)
+  async function handleEscalate(issue: DealHealthIssue) {
+    try {
+      if (apiClient.baseUrl) await dealHealthApi.escalate(issue.id || issue.quoteId)
+      info(apiClient.baseUrl ? `${issue.deal} escalated for review.` : `${issue.deal} escalation saved in demo mode.`)
+      navigate(`/quotations/${issue.quoteId}`)
+    } catch { error(`We could not escalate ${issue.deal}. Please try again.`) }
   }
 
-  const critCount = ISSUES.filter((i) => i.severity === 'Critical').length
-  const highCount = ISSUES.filter((i) => i.severity === 'High').length
+  const critCount = issues.filter((i) => i.severity === 'Critical').length
+  const highCount = issues.filter((i) => i.severity === 'High').length
 
   return (
     <>
@@ -55,7 +72,7 @@ export function DealHealth() {
 
       {/* Summary banner */}
       <div className="health-summary">
-        <span className="health-big">{ISSUES.length}</span>
+        <span className="health-big">{issues.length}</span>
         <div>
           <span>deals need attention</span>
           <div className="health-counts">
@@ -64,8 +81,8 @@ export function DealHealth() {
           </div>
         </div>
         <div className="health-bar">
-          <span style={{ width: `${(critCount / ISSUES.length) * 100}%` }} className="bar-critical" />
-          <span style={{ width: `${(highCount / ISSUES.length) * 100}%` }} className="bar-high" />
+          <span style={{ width: `${issues.length ? (critCount / issues.length) * 100 : 0}%` }} className="bar-critical" />
+          <span style={{ width: `${issues.length ? (highCount / issues.length) * 100 : 0}%` }} className="bar-high" />
         </div>
       </div>
 
@@ -79,7 +96,7 @@ export function DealHealth() {
           >
             {f.label}
             <span className="status-tab-count">
-              {f.value === 'All' ? ISSUES.length : ISSUES.filter((i) => i.severity === f.value).length}
+              {f.value === 'All' ? issues.length : issues.filter((i) => i.severity === f.value).length}
             </span>
           </button>
         ))}
@@ -92,7 +109,7 @@ export function DealHealth() {
           filtered.map((issue) => {
             const Icon = problemIcons[issue.type as keyof typeof problemIcons] ?? Zap
             return (
-              <div className="panel issue-card" key={issue.deal}>
+              <div className="panel issue-card" key={issue.id || issue.deal}>
                 <div className="issue-head">
                   <StatusBadge status={issue.severity} />
                   <span>{issue.date}</span>
@@ -104,11 +121,11 @@ export function DealHealth() {
                 <strong>{issue.deal}</strong>
                 <p>{issue.detail}</p>
                 <div className="issue-actions">
-                  <Button variant="secondary" icon={<Bell size={14} />} onClick={() => handleNudge(issue.deal)}>
+                  <Button variant="secondary" icon={<Bell size={14} />} onClick={() => void handleNudge(issue)}>
                     Nudge rep
                   </Button>
-                  <Button variant="quiet" icon={<Link size={14} />} onClick={() => { handleEscalate(issue.deal); navigate(`/quotations/${issue.quoteId}`) }}>
-                    View deal
+                  <Button variant="quiet" icon={<Link size={14} />} onClick={() => void handleEscalate(issue)}>
+                    Escalate
                   </Button>
                 </div>
               </div>

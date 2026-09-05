@@ -1,27 +1,50 @@
 import { Plus, ShieldCheck, Sparkles, Trash2, TrendingUp, X } from 'lucide-react'
-import { useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
+import { apiClient } from '../api/client'
+import { mapQuote } from '../api/map'
+import { quotationsApi } from '../api/quotations'
 import { Back, Button, Detail, PageHeader, StatusBadge, WorkflowStep } from '../components/shared'
-import { quotes, recommendations } from '../data'
 import { useToast } from '../contexts/ToastContext'
+import { products, quotes, recommendations } from '../data'
 import { money } from '../utils/format'
 
 export function QuotationDetail() {
   const { id = 'q-1048' } = useParams()
   const navigate = useNavigate()
-  const { success, info } = useToast()
-  const sourceQuote = quotes.find((item) => item.id === id) ?? quotes[0]
+  const { success, info, error } = useToast()
+  const isNew = id === 'q-new'
+  const fallbackQuote = useMemo(() => quotes.find((item) => item.id === id) ?? quotes[0], [id])
 
-  const [lines, setLines] = useState(sourceQuote.lines)
+  const [quote, setQuote] = useState(fallbackQuote)
+  const [lines, setLines] = useState(fallbackQuote.lines)
   const [submitting, setSubmitting] = useState(false)
   const [submitted, setSubmitted] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [quoteId, setQuoteId] = useState(id)
 
-  const isNew = id === 'q-new'
-  const quote = isNew ? quotes[0] : sourceQuote
+  if (!isNew && quoteId !== id) {
+    setQuote(fallbackQuote)
+    setLines(fallbackQuote.lines)
+    setQuoteId(id)
+    setSubmitted(false)
+  }
 
+  useEffect(() => {
+    if (!apiClient.baseUrl || isNew) return
+    quotationsApi.get(id).then((remote) => {
+      const mapped = mapQuote(remote, fallbackQuote)
+      setQuote(mapped)
+      setLines(mapped.lines)
+      setQuoteId(mapped.id)
+    }).catch(() => undefined)
+  }, [id, isNew, fallbackQuote])
+
+  const canEdit = !submitted && quote.status !== 'Approved' && quote.status !== 'Rejected'
   const total = lines.reduce((sum, line) => sum + line.quantity * line.price * (1 - line.discount / 100), 0)
 
   function addRecommendation(rec: typeof recommendations[0]) {
+    if (!canEdit) return
     if (lines.find((l) => l.product === rec.name)) {
       info(`${rec.name} is already in this quotation.`)
       return
@@ -34,21 +57,76 @@ export function QuotationDetail() {
   }
 
   function removeLine(lineId: string) {
+    if (!canEdit) return
     setLines((prev) => prev.filter((l) => l.id !== lineId))
     info('Line item removed.')
   }
 
-  async function handleSubmit() {
-    setSubmitting(true)
-    await new Promise((r) => setTimeout(r, 1000))
-    setSubmitting(false)
-    setSubmitted(true)
-    success('Quotation submitted for approval. Routing to Sales Manager.')
-    setTimeout(() => navigate('/approvals'), 1500)
+  function updateLine(lineId: string, field: 'quantity' | 'discount', value: number) {
+    if (!canEdit) return
+    setLines((prev) => prev.map((line) => {
+      if (line.id !== lineId) return line
+      if (field === 'quantity') return { ...line, quantity: Math.max(1, Number.isFinite(value) ? Math.floor(value) : 1) }
+      return { ...line, discount: Math.min(100, Math.max(0, Number.isFinite(value) ? value : 0)) }
+    }))
   }
 
-  function handleSave() {
-    success('Draft saved successfully.')
+  function addProduct() {
+    if (!canEdit) return
+    const next = products.find((product) => !lines.some((line) => line.product === product.name || line.sku === product.sku))
+    if (!next) {
+      info('Every catalog product is already on this quotation.')
+      return
+    }
+    setLines((prev) => [
+      ...prev,
+      { id: `l-add-${Date.now()}`, product: next.name, sku: next.sku, quantity: 1, price: next.price, discount: 0, maxDiscount: 10, recurring: next.recurring },
+    ])
+    success(`${next.name} added to quotation.`)
+  }
+
+  async function handleSubmit() {
+    if (submitting || submitted) return
+    setSubmitting(true)
+    try {
+      if (apiClient.baseUrl && !isNew) {
+        await quotationsApi.update(quoteId, { customerId: quote.customer, lines, notes: 'Updated from DealFlow360 quotation builder' })
+        await quotationsApi.submit(quoteId)
+      }
+      setSubmitted(true)
+      success(apiClient.baseUrl ? 'Quotation submitted for approval.' : 'Quotation submitted for approval in demo mode.')
+      setTimeout(() => navigate('/approvals'), 1500)
+    } catch {
+      error('We could not submit this quotation. Please try again.')
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  async function handleSave() {
+    if (saving) return
+    setSaving(true)
+    try {
+      if (apiClient.baseUrl) {
+        const payload = { customerId: quote.customer, lines, notes: 'Updated from DealFlow360 quotation builder' }
+        if (isNew) {
+          const created = mapQuote(await quotationsApi.create(payload), quote)
+          setQuote(created)
+          setLines(created.lines)
+          setQuoteId(created.id)
+          navigate(`/quotations/${created.id}`, { replace: true })
+        } else {
+          const updated = mapQuote(await quotationsApi.update(quoteId, payload), { ...quote, lines })
+          setQuote(updated)
+          setLines(updated.lines)
+        }
+      }
+      success(apiClient.baseUrl ? 'Quotation saved.' : 'Draft saved in demo mode.')
+    } catch {
+      error('We could not save this quotation. Please try again.')
+    } finally {
+      setSaving(false)
+    }
   }
 
   function discountStatus(discount: number, max: number) {
@@ -67,7 +145,7 @@ export function QuotationDetail() {
         description={isNew ? 'Build and price your new deal.' : `${quote.number} · Owned by ${quote.owner} · Updated ${quote.updated}`}
         action={
           <div className="header-actions">
-            <Button variant="secondary" onClick={handleSave}>Save draft</Button>
+            <Button variant="secondary" onClick={handleSave} disabled={saving || !canEdit}>{saving ? 'Saving…' : 'Save draft'}</Button>
           </div>
         }
       />
@@ -80,7 +158,7 @@ export function QuotationDetail() {
               <h2>Line items</h2>
               <p>Pricing and discount governance</p>
             </div>
-            <Button variant="secondary" icon={<Plus size={16} />}>Add product</Button>
+            <Button variant="secondary" icon={<Plus size={16} />} onClick={addProduct} disabled={!canEdit}>Add product</Button>
           </div>
 
           <div className="quote-lines-list">
@@ -97,10 +175,12 @@ export function QuotationDetail() {
                   </div>
                   <div className="line-discount-col">
                     <span className="col-label">Discount</span>
-                    <strong className={dStatus === 'within-limit' ? 'text-success' : dStatus !== 'no-discount' ? 'text-warn' : ''}>
-                      {line.discount}%
-                    </strong>
+                    <input className="quote-edit-input" type="number" min="0" max="100" value={line.discount} disabled={!canEdit} onChange={(event) => updateLine(line.id, 'discount', Number(event.target.value))} aria-label={`${line.product} discount`} />
                     <span className="col-sub">max {line.maxDiscount}%</span>
+                  </div>
+                  <div className="line-quantity-col">
+                    <span className="col-label">Quantity</span>
+                    <input className="quote-edit-input" type="number" min="1" value={line.quantity} disabled={!canEdit} onChange={(event) => updateLine(line.id, 'quantity', Number(event.target.value))} aria-label={`${line.product} quantity`} />
                   </div>
                   <div className="line-status-col">
                     {dStatus !== 'no-discount' && (
@@ -171,6 +251,7 @@ export function QuotationDetail() {
             <Button
               icon={submitted ? undefined : <ShieldCheck size={16} />}
               onClick={handleSubmit}
+              disabled={submitting || submitted}
             >
               {submitting ? 'Submitting…' : submitted ? '✓ Submitted' : 'Submit for approval'}
             </Button>

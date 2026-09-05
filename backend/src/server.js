@@ -14,6 +14,8 @@ const invoiceRoutes            = require("./routes/invoiceRoutes");
 const subscriptionRoutes       = require("./routes/subscriptionRoutes");
 const customerQuotationRoutes  = require("./routes/customerQuotationRoutes");
 const suggestionRoutes         = require("./routes/suggestionRoutes");
+const dashboardRoutes          = require("./routes/dashboardRoutes");
+const dealHealthRoutes         = require("./routes/dealHealthRoutes");
 const authenticateToken        = require("./middleware/authMiddleware");
 const { getMe }                = require("./controllers/authController");
 
@@ -136,7 +138,16 @@ app.use("/api/customer", customerQuotationRoutes);
 // POST /api/admin/upsell-rules
 app.use("/api/quotations", suggestionRoutes);
 
-// ─── Future route groups (uncomment as phases are completed) ─────────────────
+// ─── Phase 11 routes ──────────────────────────────────────────────────────────
+
+// GET /api/dashboard (Task 40 - Dashboard Summary)
+app.use("/api/dashboard", dashboardRoutes);
+
+// GET /api/deal-health (Tasks 41 & 42 - Stalled Deals & Discount Anomalies)
+// GET /api/deal-health/stalled
+// GET /api/deal-health/anomalies
+// GET /api/deal-health/:id
+app.use("/api/deal-health", dealHealthRoutes);
 
 // ─── 404 handler ─────────────────────────────────────────────────────────────
 app.use((req, res) => {

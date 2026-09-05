@@ -404,6 +404,43 @@ async function submitQuote(quoteId, userId, userRole) {
   }
 }
 
+// ─── CONFIRM QUOTE (TASK 29 — Phase 8) ───────────────────────────────────────
+// Only APPROVED quotes can be confirmed.
+// Confirmation triggers hybrid billing (one-time invoices + recurring subscriptions).
+
+async function confirmQuote(quoteId, userId) {
+  const quote = await getQuoteById(quoteId);
+
+  // Validation: only APPROVED quotes can be confirmed
+  if (quote.status !== "APPROVED") {
+    const err = new Error(
+      `Only APPROVED quotes can be confirmed (current status: ${quote.status})`
+    );
+    err.status = 400;
+    throw err;
+  }
+
+  // Must have at least one line
+  if (quote.lines.length === 0) {
+    const err = new Error("Cannot confirm a quote with no line items");
+    err.status = 400;
+    throw err;
+  }
+
+  // Update status to CONFIRMED
+  await pool.query("UPDATE quotes SET status = 'CONFIRMED' WHERE id = ?", [quoteId]);
+
+  // Audit log
+  await pool.query(
+    `INSERT INTO approval_audit_logs
+       (quote_id, user_id, action, previous_status, new_status, reason)
+     VALUES (?, ?, 'CONFIRMED', 'APPROVED', 'CONFIRMED', 'Order confirmed by user')`,
+    [quoteId, userId]
+  );
+
+  return getQuoteById(quoteId);
+}
+
 module.exports = {
   createQuote,
   getQuotes,
@@ -413,5 +450,6 @@ module.exports = {
   updateQuoteLine,
   deleteQuoteLine,
   submitQuote,
+  confirmQuote,
 };
 

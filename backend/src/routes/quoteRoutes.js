@@ -8,6 +8,7 @@ const {
   getQuoteHandler,
   updateQuoteHandler,
   submitQuoteHandler,
+  confirmQuoteHandler,
 } = require("../controllers/quoteController");
 const {
   approveHandler,
@@ -61,6 +62,13 @@ router.post("/:id/revision",
   authenticateToken,
   authorizeRoles("SALES_MANAGER"),
   revisionHandler
+);
+
+// POST /api/quotations/:id/confirm (Phase 8 Task 29 — APPROVED → CONFIRMED + billing)
+router.post("/:id/confirm",
+  authenticateToken,
+  authorizeRoles("ADMIN", "SALES_MANAGER", "FINANCE"),
+  confirmQuoteHandler
 );
 
 // ─── Nested: /api/quotes/:id/lines/** ────────────────────────────────────────

@@ -10,6 +10,8 @@ const discountRuleRoutes  = require("./routes/discountRuleRoutes");
 const quoteRoutes         = require("./routes/quoteRoutes");
 const approvalRoutes      = require("./routes/approvalRoutes");
 const fulfillmentRoutes   = require("./routes/fulfillmentRoutes");
+const invoiceRoutes       = require("./routes/invoiceRoutes");
+const subscriptionRoutes  = require("./routes/subscriptionRoutes");
 const authenticateToken   = require("./middleware/authMiddleware");
 const { getMe }           = require("./controllers/authController");
 
@@ -106,9 +108,19 @@ app.use("/api/approvals", approvalRoutes);
 // POST /api/quotations/:id/fulfillment/override
 app.use("/api/quotations", fulfillmentRoutes);
 
+// ─── Phase 8 routes ───────────────────────────────────────────────────────────
+
+// GET  /api/invoices
+// GET  /api/invoices/:id
+// POST /api/invoices/:id/payment
+app.use("/api/invoices", invoiceRoutes);
+
+// GET  /api/subscriptions
+// GET  /api/subscriptions/:id
+// PUT  /api/subscriptions/:id
+app.use("/api/subscriptions", subscriptionRoutes);
+
 // ─── Future route groups (uncomment as phases are completed) ─────────────────
-// app.use("/api/subscriptions",       subscriptionRoutes);
-// app.use("/api/invoices",            invoiceRoutes);
 // app.use("/api/deal-health",         dealHealthRoutes);
 // app.use("/api/reports",             reportRoutes);
 // app.use("/api/customer/quotation",  customerRoutes);

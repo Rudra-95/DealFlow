@@ -1,0 +1,844 @@
+Phase 1 — Project & Database Setup
+TASK 1 — Initialize Node.js Backend
+Create backend folder
+Initialize Node project
+Install Express, MySQL2, dotenv, CORS, bcrypt, JWT
+Configure Nodemon
+Create src/server.js
+Create .env
+Create .gitignore
+Start basic Express server
+
+Done when: GET /api/health returns Backend running.
+
+TASK 2 — Create MySQL Database & Connection
+Create dealflow360 database
+Configure mysql2
+Create connection pool
+Test database connection
+Create database/schema.sql
+
+Done when: Node successfully connects to MySQL.
+
+TASK 3 — Design & Create Core Database Schema
+
+Create the minimum required tables:
+
+users
+customers
+products
+discount_rules
+warehouses
+inventory
+subscription_plans
+quotes
+quote_lines
+approvals
+approval_audit_logs
+fulfillment_allocations
+subscriptions
+invoices
+payments
+negotiations
+
+Don't overcomplicate the schema.
+
+Done when: schema.sql creates the complete database without errors.
+
+TASK 4 — Create Seed Data
+
+Create database/seed.sql.
+
+Seed:
+
+Admin
+Sales Rep
+Sales Manager
+Finance
+Customer
+
+Gold customer
+Silver customer
+Bronze customer
+
+Hardware products
+Service products
+Subscription products
+
+Warehouse A
+Warehouse B
+
+Inventory
+
+Discount rules
+
+Subscription plans
+
+Make the seed data specifically useful for your demo.
+
+For example:
+
+Gold customer → 15% normal limit
+
+Hardware → 15% max
+Service → 10% max
+
+Laptop:
+Warehouse A → 3
+Warehouse B → 4
+
+Required quantity → 5
+
+Done when: one command/import gives you a complete demo environment.
+
+Phase 2 — Authentication
+TASK 5 — Implement User Registration
+
+Create:
+
+POST /api/auth/register
+
+Implement:
+
+Validate email
+Hash password
+Store user
+Assign role
+TASK 6 — Implement Login & JWT
+
+Create:
+
+POST /api/auth/login
+GET  /api/auth/me
+
+Implement:
+
+email + password
+       ↓
+bcrypt comparison
+       ↓
+JWT generation
+       ↓
+frontend receives token
+TASK 7 — Implement Authentication Middleware
+
+Create:
+
+middleware/auth.js
+
+Implement:
+
+Authorization: Bearer <token>
+
+Decode JWT and attach:
+
+req.user
+TASK 8 — Implement Role-Based Access Control
+
+Create:
+
+middleware/roles.js
+
+Roles:
+
+ADMIN
+SALES_REP
+SALES_MANAGER
+FINANCE
+CUSTOMER
+
+Example:
+
+Sales Rep → create quote
+Manager → approve quote
+Finance → second-level approval
+Admin → configuration
+Customer → portal only
+
+This matches the separate roles described in the specification.
+
+Phase 3 — Backend Configuration APIs
+TASK 9 — Product Management APIs
+
+Create:
+
+GET    /api/products
+GET    /api/products/:id
+POST   /api/products
+PUT    /api/products/:id
+DELETE /api/products/:id
+
+Product should contain at minimum:
+
+name
+category
+price
+cost
+billing_type
+description
+TASK 10 — Customer Management APIs
+
+Create:
+
+GET  /api/customers
+GET  /api/customers/:id
+POST /api/customers
+PUT  /api/customers/:id
+
+Customer should have:
+
+name
+email
+tier
+
+Tier:
+
+BRONZE
+SILVER
+GOLD
+TASK 11 — Discount Rule Configuration APIs
+
+Create:
+
+GET  /api/discount-rules
+POST /api/discount-rules
+PUT  /api/discount-rules/:id
+
+Rules should support:
+
+customer tier
+product category
+maximum discount
+approval level
+
+The specification specifically calls for customer-tier and category-specific discount ceilings.
+
+TASK 12 — Warehouse & Inventory APIs
+
+Create:
+
+GET  /api/warehouses
+POST /api/warehouses
+
+GET  /api/inventory
+POST /api/inventory
+PUT  /api/inventory/:id
+
+Support:
+
+warehouse
+product
+available_quantity
+shipping_cost
+TASK 13 — Subscription Plan APIs
+
+Create:
+
+GET  /api/subscription-plans
+POST /api/subscription-plans
+PUT  /api/subscription-plans/:id
+
+Support:
+
+MONTHLY
+QUARTERLY
+YEARLY
+
+The specification calls for recurring plans and proration rules.
+
+Phase 4 — Quotation Engine 🔥
+
+This is where your main backend business logic starts.
+
+TASK 14 — Create Quotation APIs
+
+Create:
+
+POST /api/quotes
+GET  /api/quotes
+GET  /api/quotes/:id
+PUT  /api/quotes/:id
+
+Quotation:
+
+customer
+sales_rep
+status
+subtotal
+discount
+grand_total
+margin
+risk_score
+TASK 15 — Implement Quote Line Management
+
+Create:
+
+POST   /api/quotes/:id/lines
+PUT    /api/quotes/:id/lines/:lineId
+DELETE /api/quotes/:id/lines/:lineId
+
+Each line:
+
+product
+quantity
+unit_price
+discount_percent
+discount_amount
+line_total
+margin
+TASK 16 — Implement Quote Calculation Engine
+
+Create:
+
+services/quoteService.js
+
+Implement:
+
+subtotal
+discount amount
+line total
+grand total
+cost
+margin
+
+Formula:
+
+gross = price × quantity
+
+discount = gross × discount% / 100
+
+net = gross - discount
+
+margin = net - cost
+
+Important: calculate these on the backend. Never trust totals coming from React.
+
+Phase 5 — Discount Governance 🔥🔥🔥
+TASK 17 — Implement Discount Limit Engine
+
+Create:
+
+services/discountService.js
+
+Determine:
+
+customer limit
++
+category limit
+↓
+effective limit
+
+Use:
+
+effectiveLimit = Math.min(
+    customerLimit,
+    categoryLimit
+);
+TASK 18 — Implement Line-Level Discount Violation Detection
+
+For every quote line:
+
+actual discount
+        ↓
+allowed discount
+        ↓
+calculate excess
+
+Example:
+
+Service allowed = 10%
+
+Rep gives = 18%
+
+Excess = 8%
+
+The problem statement specifically gives this kind of example.
+
+TASK 19 — Implement Blended Risk Score
+
+Create:
+
+calculateBlendedRisk()
+
+Your system should consider all lines, not just the worst line.
+
+Example:
+
+Line 1 → +2 risk
+Line 2 → +3 risk
+Line 3 → +2 risk
+
+Total blended risk → 7
+
+This is important because the specification explicitly says small violations across multiple lines should accumulate into the blended risk.
+
+Phase 6 — Automatic Approval Workflow 🔥🔥🔥
+TASK 20 — Implement Approval Routing Engine
+
+Create:
+
+services/approvalService.js
+
+Input:
+
+risk score
+
+Output:
+
+NO_APPROVAL
+
+or
+
+SALES_MANAGER
+
+or
+
+SALES_MANAGER → FINANCE
+
+Keep the thresholds configurable.
+
+TASK 21 — Implement Quote Submission Workflow
+
+Create:
+
+POST /api/quotes/:id/submit
+
+Flow:
+
+Submit Quote
+     ↓
+Calculate totals
+     ↓
+Calculate risk
+     ↓
+Determine approval
+     ↓
+Create approval records
+     ↓
+Update quote status
+
+Example:
+
+DRAFT
+ ↓
+PENDING_MANAGER
+ ↓
+PENDING_FINANCE
+ ↓
+APPROVED
+TASK 22 — Implement Manager Approval
+
+Create:
+
+GET  /api/approvals/pending
+POST /api/quotes/:id/approve
+POST /api/quotes/:id/reject
+POST /api/quotes/:id/revision
+
+Only:
+
+SALES_MANAGER
+
+can perform manager approval.
+
+TASK 23 — Implement Finance Approval
+
+Finance should only be able to approve when the approval chain requires Finance.
+
+Flow:
+
+Manager Approved
+       ↓
+Finance Pending
+       ↓
+Finance Approved
+       ↓
+Quote Approved
+TASK 24 — Implement Approval Audit Trail
+
+Every action should store:
+
+quote
+user
+action
+reason
+timestamp
+
+Examples:
+
+Manager APPROVED quote #12
+Manager REJECTED quote #15
+Finance APPROVED quote #20
+Rep EDITED quote #20
+
+The requirement explicitly calls for this audit history.
+
+Phase 7 — Warehouse Fulfillment 🔥🔥
+TASK 25 — Implement Warehouse Allocation Algorithm
+
+Create:
+
+services/fulfillmentService.js
+
+Input:
+
+Product required = 5
+
+Inventory:
+
+Warehouse A = 3
+Warehouse B = 4
+
+Output:
+
+Warehouse A → 3
+Warehouse B → 2
+TASK 26 — Implement Backorder Calculation
+
+Example:
+
+Required = 10
+Available = 7
+
+Fulfilled = 7
+Backorder = 3
+TASK 27 — Create Fulfillment APIs
+GET  /api/quotes/:id/fulfillment-suggestion
+
+POST /api/quotes/:id/fulfillment/accept
+
+POST /api/quotes/:id/fulfillment/override
+
+The specification requires both automatic splitting and manual override.
+
+TASK 28 — Implement Inventory Reservation/Reduction
+
+When fulfillment is accepted:
+
+available inventory
+       ↓
+subtract allocated quantity
+       ↓
+create fulfillment allocation
+
+Do this inside a MySQL transaction if possible.
+
+Phase 8 — Hybrid Billing 🔥🔥
+TASK 29 — Implement Order Confirmation
+
+Create:
+
+POST /api/quotes/:id/confirm
+
+Only allow:
+
+APPROVED
+
+quotes to become confirmed orders.
+
+TASK 30 — Separate One-Time & Recurring Lines
+
+Example:
+
+Laptop
+→ ONE_TIME
+
+Support
+→ MONTHLY
+
+Same order, separate billing behavior.
+
+This directly matches the hybrid billing requirement.
+
+TASK 31 — Generate Subscription Billing Schedule
+
+Create:
+
+services/billingService.js
+
+Generate:
+
+subscription
+start date
+next billing date
+amount
+billing interval
+TASK 32 — Implement Proration
+
+For mid-cycle change:
+
+monthly price × remaining days / cycle days
+
+Store the resulting billing adjustment.
+
+TASK 33 — Implement Invoice & Payment APIs
+GET  /api/invoices
+GET  /api/invoices/:id
+POST /api/invoices/:id/pay
+
+Payment can simply update:
+
+UNPAID → PAID
+
+for the hackathon.
+
+Phase 9 — Customer Negotiation 🔥🔥
+TASK 34 — Implement Restricted Customer Portal Authentication
+
+Create a separate portal authentication mechanism.
+
+Customer should only see their own quotes.
+
+Never expose:
+
+product cost
+internal margin
+internal approval notes
+internal risk calculations
+TASK 35 — Create Customer Quote View API
+GET /api/portal/quotes/:token
+
+Return:
+
+products
+quantity
+price
+discount
+total
+status
+TASK 36 — Implement Negotiation Requests
+POST /api/portal/quotes/:token/negotiate
+
+Support:
+
+line comment
+change request
+counter discount
+
+The customer portal specifically requires line-level requests and counter-discount proposals.
+
+TASK 37 — Implement Automatic Re-Approval
+
+This is a very important demo feature.
+
+Flow:
+
+Customer requests 18%
+        ↓
+Backend changes quote
+        ↓
+Discount engine runs AGAIN
+        ↓
+Risk calculated AGAIN
+        ↓
+Approval required?
+        ↓
+YES
+        ↓
+PENDING_MANAGER
+
+The statement explicitly requires the quote to re-enter approval when negotiated terms exceed thresholds.
+
+Phase 10 — Upsell / Cross-Sell
+TASK 38 — Create Upsell/Cross-Sell Rules
+
+Table:
+
+product_id
+suggested_product_id
+priority
+promoted
+min_margin
+TASK 39 — Implement Recommendation API
+GET /api/quotes/:id/suggestions
+
+Return:
+
+{
+  "product": "Premium Support",
+  "marginDelta": 1200,
+  "promoted": true
+}
+
+The requirements call for ranked suggestions, promotion tags and margin impact.
+
+Phase 11 — Deal Health & Dashboard
+TASK 40 — Implement Dashboard Summary
+GET /api/dashboard/summary
+
+Return:
+
+total quotes
+pending approvals
+approved quotes
+orders
+revenue
+TASK 41 — Implement Stalled Deal Detection
+
+Example:
+
+Quote inactive > 3 days
+        ↓
+STALLED
+TASK 42 — Implement Discount Anomaly Detection
+
+Simple rule:
+
+current discount
+>
+rep historical average + threshold
+
+Then:
+
+ANOMALY = true
+
+The problem statement specifically calls for stalled deals and discount anomaly alerts.
+
+Phase 12 — Final Integration
+TASK 43 — Create Complete Backend Demo Flow
+
+You should be able to execute:
+
+LOGIN
+ ↓
+CREATE QUOTE
+ ↓
+ADD PRODUCTS
+ ↓
+APPLY DISCOUNT
+ ↓
+CALCULATE MARGIN
+ ↓
+CALCULATE RISK
+ ↓
+AUTO APPROVAL
+ ↓
+MANAGER APPROVAL
+ ↓
+FINANCE APPROVAL
+ ↓
+WAREHOUSE SPLIT
+ ↓
+CONFIRM ORDER
+ ↓
+GENERATE BILLING
+ ↓
+CUSTOMER NEGOTIATION
+ ↓
+RE-CALCULATE RISK
+ ↓
+RE-APPROVAL
+ ↓
+FINAL CONFIRMATION
+ ↓
+PAYMENT
+
+This is essentially the core acceptance flow specified by the challenge.
+
+Phase 13 — Git / Merge Tasks
+
+Use this exact pattern.
+
+TASK 44 — Push Backend Foundation
+git add .
+git commit -m "feat: setup backend and database"
+git push origin backend
+TASK 45 — Push Authentication
+git add .
+git commit -m "feat: implement authentication and RBAC"
+git push origin backend
+TASK 46 — Push Quote Engine
+git add .
+git commit -m "feat: implement quotation and pricing engine"
+git push origin backend
+TASK 47 — Push Discount & Approval Engine
+git add .
+git commit -m "feat: implement discount governance and approval workflow"
+git push origin backend
+TASK 48 — Push Fulfillment & Billing
+git add .
+git commit -m "feat: implement warehouse fulfillment and hybrid billing"
+git push origin backend
+TASK 49 — Push Portal & Dashboard
+git add .
+git commit -m "feat: implement customer negotiation and dashboard APIs"
+git push origin backend
+🔥 Your actual priority list
+
+If time starts running out, do not try to finish all 49 tasks equally.
+
+Your order should be:
+
+                    MUST HAVE
+                       ↓
+              1. Database
+                       ↓
+              2. Authentication
+                       ↓
+              3. Products
+                       ↓
+              4. Customers
+                       ↓
+              5. Quotes
+                       ↓
+              6. Quote Lines
+                       ↓
+              7. Price/Margin Calculation
+                       ↓
+              8. Discount Engine
+                       ↓
+              9. Risk Score
+                       ↓
+             10. Approval Routing
+                       ↓
+             11. Manager Approval
+                       ↓
+             12. Finance Approval
+                       ↓
+             13. Audit Trail
+                       ↓
+             14. Warehouse Split
+                       ↓
+             15. Order Confirmation
+                       ↓
+             16. Hybrid Billing
+                       ↓
+             17. Customer Negotiation
+                       ↓
+             18. Re-Approval
+
+Then:
+
+              SHOULD HAVE
+                   ↓
+              Upselling
+                   ↓
+              Backorders
+                   ↓
+              Payment
+                   ↓
+              Dashboard
+                   ↓
+              Anomaly Detection
+
+And only if you still have time:
+
+              NICE TO HAVE
+                   ↓
+          Advanced reports
+          PDF/XLS export
+          Advanced subscriptions
+          Complex promotions
+          Multi-currency
+          Automated nudges
+🎯 One thing I strongly recommend
+
+Don't start coding all these controllers immediately.
+
+Start with:
+
+TASK 1 → TASK 2 → TASK 3 → TASK 4
+
+Then I can walk you through the implementation task-by-task, starting with TASK 1: Node.js backend setup + exact folder structure + npm commands + initial server.js + Git commands.
+
+Once TASK 1 works, move to TASK 2, then TASK 3, and so on. This will keep you and your frontend partner synchronized throughout the hackathon.

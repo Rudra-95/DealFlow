@@ -228,6 +228,274 @@ kbd { display: inline-flex; align-items: center; justify-content: center; min-wi
 .demo-pill strong { display: block; font-size: 10px; color: #344760; }
 .demo-pill small { display: block; font-size: 9px; color: #94a2b3; margin-top: 1px; }
 
+/* ── DealFlow360 visual finish ─────────────────
+   Color and surface treatment only. Interaction and layout remain unchanged. */
+:root {
+  --ink: #29263a;
+  --muted: #706d7c;
+  --line: #e8e2da;
+  --blue: #5146d8;
+  --navy: #29245c;
+  --bg: #f7f4ef;
+  --panel: #fffdfa;
+  --green: #16806a;
+  --amber: #bd7618;
+  --coral: #c9685e;
+}
+
+body,
+.app-shell {
+  background: #f7f4ef;
+}
+
+.app-shell {
+  background:
+    radial-gradient(circle at 86% 0%, rgba(224, 210, 242, 0.34), transparent 30rem),
+    radial-gradient(circle at 8% 88%, rgba(246, 226, 183, 0.24), transparent 27rem),
+    #f7f4ef;
+}
+
+.topbar {
+  background: rgba(255, 253, 249, 0.9);
+  border-bottom-color: #e5ded5;
+}
+
+.sidebar {
+  background:
+    linear-gradient(180deg, #312b70 0%, #28245c 48%, #211d4d 100%);
+  border-right-color: rgba(255, 255, 255, 0.09);
+}
+
+.workspace-block {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.workspace-icon {
+  color: #f3d77b;
+  background: rgba(201, 162, 39, 0.22);
+}
+
+.nav-link.active {
+  background: #f5e9ae;
+  color: #2d2863;
+  box-shadow: 0 7px 18px rgba(201, 162, 39, 0.16);
+}
+
+.panel,
+.metric-card,
+.table-panel,
+.dropdown,
+.modal,
+.toast {
+  border-color: #e6ded4;
+  background-color: #fffdfa;
+}
+
+.panel {
+  box-shadow: 0 14px 32px rgba(58, 45, 83, 0.055), 0 2px 6px rgba(58, 45, 83, 0.025);
+}
+
+.panel-heading,
+.table-panel th {
+  border-color: #eee8e1;
+}
+
+.metric-navy {
+  background: #29245c;
+  border-color: #29245c;
+}
+
+.metric-amber {
+  background: #fff9ec;
+  border-color: #ecdcb8;
+}
+
+.metric-blue {
+  background: #f3f1ff;
+  border-color: #ded9f4;
+}
+
+.metric-coral {
+  background: #fbf2f4;
+  border-color: #ead9df;
+}
+
+.status-approved,
+.status-active,
+.status-low,
+.status-within-limit,
+.status-paid {
+  color: #16735f;
+  background: #e7f4ee;
+}
+
+.status-pending,
+.status-medium,
+.status-approval-required,
+.status-unpaid,
+.status-split-pending {
+  color: #a86613;
+  background: #fff1d1;
+}
+
+.status-at-risk,
+.status-high,
+.status-overdue,
+.status-critical,
+.status-rejected {
+  color: #b45852;
+  background: #fbeceb;
+}
+
+.status-draft,
+.status-paused {
+  color: #635c7a;
+  background: #eeeaf7;
+}
+
+.button-primary {
+  background: #5146d8;
+  box-shadow: 0 8px 17px rgba(81, 70, 216, 0.2);
+}
+
+.button-secondary {
+  color: #443d66;
+  border-color: #ded7e8;
+  background: #fffdfa;
+}
+
+.button-quiet {
+  color: #5146d8;
+  background: #f0edff;
+}
+
+.search,
+.filter-button,
+.filter-select,
+.status-tab,
+.panel-heading select {
+  border-color: #e3dcd3;
+  background: #fffdfa;
+}
+
+.status-tab.active {
+  color: #5146d8;
+  border-color: #c7c0ed;
+  background: #efedff;
+}
+
+.activity-panel {
+  background: linear-gradient(145deg, #fffdfa 0%, #fbf8ff 100%);
+}
+
+.dashboard-page {
+  background:
+    linear-gradient(120deg, rgba(255, 255, 255, 0.56), transparent 32%),
+    linear-gradient(305deg, rgba(124, 92, 158, 0.08), transparent 38%),
+    #f7f4ef;
+}
+
+/* ── Final atmospheric canvas and icon contrast ─────────────
+   Deliberately opaque surfaces keep the shell crisp instead of glassy. */
+.app-shell {
+  background:
+    linear-gradient(112deg, rgba(255, 255, 255, 0.62) 0%, rgba(255, 255, 255, 0) 31%),
+    linear-gradient(248deg, rgba(232, 223, 246, 0.36) 0%, rgba(232, 223, 246, 0) 39%),
+    linear-gradient(164deg, #fbf9f5 0%, #f5f0ea 48%, #f8f5f1 100%);
+}
+.app-shell::before {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 42rem 18rem at 78% 8%, rgba(244, 231, 185, 0.20), transparent 72%),
+    radial-gradient(ellipse 34rem 24rem at 28% 94%, rgba(216, 204, 235, 0.18), transparent 74%),
+    linear-gradient(105deg, rgba(255, 255, 255, 0.18), transparent 52%);
+  content: "";
+}
+.sidebar {
+  opacity: 1;
+  background:
+    linear-gradient(180deg, rgba(81, 70, 216, 0.22) 0%, rgba(81, 70, 216, 0) 32%),
+    #29245c;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+.sidebar::after {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 1px;
+  background: linear-gradient(180deg, rgba(246, 226, 144, 0.5), rgba(255, 255, 255, 0.06) 38%, rgba(255, 255, 255, 0.14));
+  content: "";
+  pointer-events: none;
+}
+.topbar {
+  background: #fffdfa;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+.main {
+  background: transparent;
+}
+.workspace-icon {
+  border: 1px solid rgba(246, 226, 144, 0.24);
+  box-shadow: 0 5px 12px rgba(18, 14, 59, 0.16);
+}
+.nav-link svg {
+  color: #bcb9dc;
+  transition: color 180ms ease, transform 180ms ease;
+}
+.nav-link:hover svg { color: #f1d87c; transform: scale(1.06); }
+.nav-link.active svg { color: #29245c; }
+.nav-count-alert { background: #9e5e79; color: #fff6f5; }
+.top-actions .icon-button {
+  color: #6f6689;
+  border-radius: 9px;
+  transition: color 180ms ease, background-color 180ms ease, transform 180ms ease;
+}
+.top-actions .icon-button:hover {
+  color: #4338ca;
+  background: #f0edff;
+  transform: translateY(-1px);
+}
+.top-avatar {
+  color: #fff;
+  background: #29245c;
+  box-shadow: 0 4px 10px rgba(41, 36, 92, 0.18);
+}
+.dashboard-page,
+.content > * {
+  position: relative;
+  z-index: 1;
+}
+.dashboard-page .metric-top svg,
+.dashboard-page .text-link svg,
+.dashboard-page .dashboard-text-link svg {
+  color: #c9a227;
+}
+.dashboard-page .metric-blue .metric-top svg,
+.dashboard-page .dashboard-text-link svg { color: #5146d8; }
+.dashboard-page .metric-coral .metric-top svg { color: #9c6083; }
+.dashboard-page .activity-icon {
+  box-shadow: 0 4px 10px rgba(58, 45, 83, 0.08);
+}
+.dashboard-page .panel-heading::after {
+  display: block;
+  width: 28px;
+  height: 2px;
+  margin-left: auto;
+  border-radius: 2px;
+  background: linear-gradient(90deg, #c9a227, #7c5c9e);
+  content: "";
+}
+.dashboard-page .panel-heading > div { flex: 1; }
+.dashboard-page .chart-period { box-shadow: 0 4px 10px rgba(58, 45, 83, 0.05); }
+.panel-heading .text-link { white-space: nowrap; }
+
 /* ── Status filter tabs ─────────────────── */
 .status-filter-tabs { display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 18px; }
 .status-tab { display: flex; align-items: center; gap: 5px; padding: 7px 12px; border: 1px solid var(--line); border-radius: 7px; background: white; color: #6b788b; font-size: 11px; font-weight: 600; cursor: pointer; transition: 0.15s; }

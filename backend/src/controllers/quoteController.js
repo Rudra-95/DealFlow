@@ -7,6 +7,7 @@ const {
   confirmQuote,
 } = require("../services/quoteService");
 const { processHybridBilling } = require("../services/billingService");
+const { generateCustomerToken } = require("../middleware/customerAuthMiddleware");
 
 // ─── POST /api/quotes ─────────────────────────────────────────────────────────
 async function createQuoteHandler(req, res) {
@@ -139,6 +140,52 @@ async function confirmQuoteHandler(req, res) {
   }
 }
 
+// ─── POST /api/quotes/:id/share-with-customer ──────────────────────────────────
+// Phase 9 — Generate customer portal token for a quote
+// Allows sales rep to share quote with customer for negotiation
+async function shareWithCustomerHandler(req, res) {
+  const id = parseInt(req.params.id, 10);
+  if (!Number.isInteger(id) || id <= 0) {
+    return res.status(400).json({ success: false, message: "Invalid quote ID" });
+  }
+
+  try {
+    const quote = await getQuoteById(id);
+
+    // Ownership: SALES_REP can only share their own quotes
+    if (req.user.role === "SALES_REP" && quote.sales_rep.id !== req.user.id) {
+      return res.status(403).json({ success: false, message: "Access denied" });
+    }
+
+    // Quote must be in a shareable state
+    const shareableStatuses = ["APPROVED", "UNDER_NEGOTIATION"];
+    if (!shareableStatuses.includes(quote.status)) {
+      return res.status(400).json({
+        success: false,
+        message: `Cannot share quote with status '${quote.status}'. Quote must be APPROVED.`,
+      });
+    }
+
+    // Generate customer portal token (valid for 30 days)
+    const token = generateCustomerToken(quote.customer.id, quote.id, "30d");
+
+    // In production, you might want to store this token and send it via email
+    // For now, just return it
+    return res.status(200).json({
+      success: true,
+      message: "Customer portal token generated",
+      token,
+      customer_portal_url: `/customer/quotation?token=${token}`,
+      expires_in: "30 days",
+    });
+  } catch (err) {
+    return res.status(err.status || 500).json({
+      success: false,
+      message: err.message || "Failed to share quote with customer",
+    });
+  }
+}
+
 module.exports = {
   createQuoteHandler,
   getQuotesHandler,
@@ -146,4 +193,5 @@ module.exports = {
   updateQuoteHandler,
   submitQuoteHandler,
   confirmQuoteHandler,
+  shareWithCustomerHandler,
 };

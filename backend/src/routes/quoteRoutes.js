@@ -9,6 +9,7 @@ const {
   updateQuoteHandler,
   submitQuoteHandler,
   confirmQuoteHandler,
+  shareWithCustomerHandler,
 } = require("../controllers/quoteController");
 const {
   approveHandler,
@@ -69,6 +70,13 @@ router.post("/:id/confirm",
   authenticateToken,
   authorizeRoles("ADMIN", "SALES_MANAGER", "FINANCE"),
   confirmQuoteHandler
+);
+
+// POST /api/quotes/:id/share-with-customer (Phase 9 — Generate customer portal token)
+router.post("/:id/share-with-customer",
+  authenticateToken,
+  authorizeRoles("ADMIN", "SALES_REP", "SALES_MANAGER"),
+  shareWithCustomerHandler
 );
 
 // ─── Nested: /api/quotes/:id/lines/** ────────────────────────────────────────

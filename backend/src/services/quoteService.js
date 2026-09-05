@@ -1,7 +1,8 @@
-const pool                    = require("../config/db");
-const { getCustomerById }     = require("./customerService");
-const { getProductWithCost }  = require("./productService");
+const pool                      = require("../config/db");
+const { getCustomerById }       = require("./customerService");
+const { getProductWithCost }    = require("./productService");
 const { analyzeQuoteDiscounts } = require("./discountService");
+const { determineApproval }     = require("./approvalService");
 
 // ─── Pure line calculation (no I/O) ──────────────────────────────────────────
 // All values come from the database — never from frontend input.
@@ -306,6 +307,103 @@ async function deleteQuoteLine(quoteId, lineId) {
   return getQuoteById(quoteId);
 }
 
+// ─── SUBMIT QUOTE ────────────────────────────────────────────────────────────
+
+async function submitQuote(quoteId, userId, userRole) {
+  // Step 21.2 — validate quote exists
+  const quote = await getQuoteById(quoteId);
+
+  // Ownership: SALES_REP can only submit their own
+  if (userRole === "SALES_REP" && quote.sales_rep.id !== userId) {
+    const err = new Error("You can only submit your own quotes"); err.status = 403; throw err;
+  }
+
+  // Step 21.3 — only DRAFT quotes can be submitted
+  if (quote.status !== "DRAFT") {
+    const err = new Error(`Cannot submit a quote with status '${quote.status}'`);
+    err.status = 400; throw err;
+  }
+
+  // Step 21.4 — must have at least one line
+  if (quote.lines.length === 0) {
+    const err = new Error("Cannot submit a quote with no line items"); err.status = 400; throw err;
+  }
+
+  // Step 21.5 — recalculate financial totals from current lines
+  const connA = await pool.getConnection();
+  try {
+    await connA.beginTransaction();
+    await recalculateQuote(connA, quoteId);
+    await connA.commit();
+  } catch (err) {
+    await connA.rollback(); throw err;
+  } finally {
+    connA.release();
+  }
+
+  // Step 21.6 — recalculate discount risk (Phase 5)
+  const { riskScore } = await analyzeQuoteDiscounts(quoteId);
+
+  // Step 21.7 — determine approval routing (Phase 6)
+  const routing = determineApproval(riskScore);
+
+  // Steps 21.8–21.9 — create approval records + update status + audit log
+  // All three tables updated in ONE transaction for consistency.
+  const connB = await pool.getConnection();
+  try {
+    await connB.beginTransaction();
+
+    // Clean up leftover approvals from any prior revision flow
+    await connB.query("DELETE FROM approvals WHERE quote_id = ?", [quoteId]);
+
+    let newStatus;
+
+    if (!routing.approvalRequired) {
+      newStatus = "APPROVED";
+    } else {
+      newStatus = "PENDING_MANAGER";
+
+      await connB.query(
+        `INSERT INTO approvals (quote_id, approver_role, sequence_number, status)
+         VALUES (?, 'SALES_MANAGER', 1, 'PENDING')`,
+        [quoteId]
+      );
+      if (routing.requiresFinance) {
+        await connB.query(
+          `INSERT INTO approvals (quote_id, approver_role, sequence_number, status)
+           VALUES (?, 'FINANCE', 2, 'PENDING')`,
+          [quoteId]
+        );
+      }
+    }
+
+    await connB.query("UPDATE quotes SET status = ? WHERE id = ?", [newStatus, quoteId]);
+
+    const reason = routing.approvalRequired
+      ? `Risk ${riskScore}: requires ${routing.requiresFinance ? "SALES_MANAGER → FINANCE" : "SALES_MANAGER"}`
+      : `Risk ${riskScore}: auto-approved (no discount violations)`;
+
+    await connB.query(
+      `INSERT INTO approval_audit_logs
+         (quote_id, user_id, action, previous_status, new_status, reason)
+       VALUES (?, ?, 'SUBMITTED', 'DRAFT', ?, ?)`,
+      [quoteId, userId, newStatus, reason]
+    );
+
+    await connB.commit();
+
+    return {
+      quote: await getQuoteById(quoteId),
+      routing,
+      risk_score: riskScore,
+    };
+  } catch (err) {
+    await connB.rollback(); throw err;
+  } finally {
+    connB.release();
+  }
+}
+
 module.exports = {
   createQuote,
   getQuotes,
@@ -314,4 +412,6 @@ module.exports = {
   addQuoteLine,
   updateQuoteLine,
   deleteQuoteLine,
+  submitQuote,
 };
+

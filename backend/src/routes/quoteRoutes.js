@@ -7,7 +7,13 @@ const {
   getQuotesHandler,
   getQuoteHandler,
   updateQuoteHandler,
+  submitQuoteHandler,
 } = require("../controllers/quoteController");
+const {
+  approveHandler,
+  rejectHandler,
+  revisionHandler,
+} = require("../controllers/approvalController");
 const quoteLineRouter   = require("./quoteLineRoutes");
 
 // Roles that can read quotes
@@ -28,6 +34,34 @@ router.get("/:id",    canRead,  getQuoteHandler);
 
 // PUT  /api/quotes/:id
 router.put("/:id",    canWrite, updateQuoteHandler);
+
+// POST /api/quotes/:id/submit (DRAFT → PENDING_MANAGER | APPROVED)
+router.post("/:id/submit",
+  authenticateToken,
+  authorizeRoles("ADMIN", "SALES_REP", "SALES_MANAGER"),
+  submitQuoteHandler
+);
+
+// POST /api/quotes/:id/approve (SALES_MANAGER or FINANCE depending on current stage)
+router.post("/:id/approve",
+  authenticateToken,
+  authorizeRoles("SALES_MANAGER", "FINANCE"),
+  approveHandler
+);
+
+// POST /api/quotes/:id/reject
+router.post("/:id/reject",
+  authenticateToken,
+  authorizeRoles("SALES_MANAGER", "FINANCE"),
+  rejectHandler
+);
+
+// POST /api/quotes/:id/revision (SALES_MANAGER only — returns quote to DRAFT)
+router.post("/:id/revision",
+  authenticateToken,
+  authorizeRoles("SALES_MANAGER"),
+  revisionHandler
+);
 
 // ─── Nested: /api/quotes/:id/lines/** ────────────────────────────────────────
 // The quoteLineRouter receives mergeParams:true so :id is available there too.

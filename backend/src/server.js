@@ -7,6 +7,7 @@ const authRoutes         = require("./routes/authRoutes");
 const productRoutes      = require("./routes/productRoutes");
 const discountRuleRoutes = require("./routes/discountRuleRoutes");
 const quoteRoutes        = require("./routes/quoteRoutes");
+const approvalRoutes     = require("./routes/approvalRoutes");
 const authenticateToken  = require("./middleware/authMiddleware");
 const { getMe }          = require("./controllers/authController");
 
@@ -56,16 +57,16 @@ app.use("/api/products", productRoutes);
 // GET /api/admin/discount-rules   PUT /api/admin/discount-rules
 app.use("/api/admin/discount-rules", discountRuleRoutes);
 
-// ─── Phase 4 routes ──────────────────────────────────────────────────────────
+// ─── Phase 4/5/6 routes ──────────────────────────────────────────────────────────
 
-// POST /api/quotes            GET /api/quotes
-// GET  /api/quotes/:id        PUT /api/quotes/:id
-// POST /api/quotes/:id/lines  PUT /api/quotes/:id/lines/:lineId
-// DELETE /api/quotes/:id/lines/:lineId
+// Quotes + lines + submit + approval workflow actions
 app.use("/api/quotes", quoteRoutes);
 
+// GET /api/approvals/pending  (Manager / Finance queue)
+app.use("/api/approvals", approvalRoutes);
+
 // ─── Future route groups (uncomment as phases are completed) ─────────────────
-// app.use("/api/approvals",           approvalRoutes);
+// app.use("/api/fulfillment",         fulfillmentRoutes);
 // app.use("/api/fulfillment",         fulfillmentRoutes);
 // app.use("/api/subscriptions",       subscriptionRoutes);
 // app.use("/api/invoices",            invoiceRoutes);

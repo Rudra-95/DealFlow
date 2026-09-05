@@ -3,6 +3,7 @@ const {
   getQuotes,
   getQuoteById,
   updateQuote,
+  submitQuote,
 } = require("../services/quoteService");
 
 // ─── POST /api/quotes ─────────────────────────────────────────────────────────
@@ -83,4 +84,28 @@ async function updateQuoteHandler(req, res) {
   }
 }
 
-module.exports = { createQuoteHandler, getQuotesHandler, getQuoteHandler, updateQuoteHandler };
+// ─── POST /api/quotes/:id/submit ────────────────────────────────────────────────
+async function submitQuoteHandler(req, res) {
+  const id = parseInt(req.params.id, 10);
+  if (!Number.isInteger(id) || id <= 0) {
+    return res.status(400).json({ success: false, message: "Invalid quote ID" });
+  }
+
+  try {
+    const result = await submitQuote(id, req.user.id, req.user.role);
+    return res.status(200).json({
+      success: true,
+      message: `Quote submitted — status: ${result.quote.status}`,
+      quote:      result.quote,
+      routing:    result.routing,
+      risk_score: result.risk_score,
+    });
+  } catch (err) {
+    return res.status(err.status || 500).json({
+      success: false,
+      message: err.message || "Failed to submit quote",
+    });
+  }
+}
+
+module.exports = { createQuoteHandler, getQuotesHandler, getQuoteHandler, updateQuoteHandler, submitQuoteHandler };

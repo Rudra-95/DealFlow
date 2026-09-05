@@ -2,12 +2,13 @@ const express = require("express");
 const cors    = require("cors");
 require("dotenv").config();
 
-const pool              = require("./config/db");
-const authRoutes        = require("./routes/authRoutes");
-const productRoutes     = require("./routes/productRoutes");
+const pool               = require("./config/db");
+const authRoutes         = require("./routes/authRoutes");
+const productRoutes      = require("./routes/productRoutes");
 const discountRuleRoutes = require("./routes/discountRuleRoutes");
-const authenticateToken = require("./middleware/authMiddleware");
-const { getMe }         = require("./controllers/authController");
+const quoteRoutes        = require("./routes/quoteRoutes");
+const authenticateToken  = require("./middleware/authMiddleware");
+const { getMe }          = require("./controllers/authController");
 
 const app  = express();
 const PORT = process.env.PORT || 5000;
@@ -55,18 +56,23 @@ app.use("/api/products", productRoutes);
 // GET /api/admin/discount-rules   PUT /api/admin/discount-rules
 app.use("/api/admin/discount-rules", discountRuleRoutes);
 
-// ─── Future route groups (uncomment as tasks are completed) ──────────────────
-// app.use("/api/products",            authenticateToken, productRoutes);
-// app.use("/api/quotations",          authenticateToken, quotationRoutes);
-// app.use("/api/approvals",           authenticateToken, approvalRoutes);
-// app.use("/api/fulfillment",         authenticateToken, fulfillmentRoutes);
-// app.use("/api/subscriptions",       authenticateToken, subscriptionRoutes);
-// app.use("/api/invoices",            authenticateToken, invoiceRoutes);
-// app.use("/api/deal-health",         authenticateToken, dealHealthRoutes);
-// app.use("/api/reports",             authenticateToken, reportRoutes);
-// app.use("/api/customer/quotation",  authenticateToken, customerRoutes);
-// app.use("/api/admin",               authenticateToken, adminRoutes);
-// app.use("/api/dashboard",           authenticateToken, dashboardRoutes);
+// ─── Phase 4 routes ──────────────────────────────────────────────────────────
+
+// POST /api/quotes            GET /api/quotes
+// GET  /api/quotes/:id        PUT /api/quotes/:id
+// POST /api/quotes/:id/lines  PUT /api/quotes/:id/lines/:lineId
+// DELETE /api/quotes/:id/lines/:lineId
+app.use("/api/quotes", quoteRoutes);
+
+// ─── Future route groups (uncomment as phases are completed) ─────────────────
+// app.use("/api/approvals",           approvalRoutes);
+// app.use("/api/fulfillment",         fulfillmentRoutes);
+// app.use("/api/subscriptions",       subscriptionRoutes);
+// app.use("/api/invoices",            invoiceRoutes);
+// app.use("/api/deal-health",         dealHealthRoutes);
+// app.use("/api/reports",             reportRoutes);
+// app.use("/api/customer/quotation",  customerRoutes);
+// app.use("/api/dashboard",           dashboardRoutes);
 
 // ─── 404 handler ─────────────────────────────────────────────────────────────
 app.use((req, res) => {

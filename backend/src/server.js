@@ -2,10 +2,12 @@ const express = require("express");
 const cors    = require("cors");
 require("dotenv").config();
 
-const pool            = require("./config/db");
-const authRoutes      = require("./routes/authRoutes");
+const pool              = require("./config/db");
+const authRoutes        = require("./routes/authRoutes");
+const productRoutes     = require("./routes/productRoutes");
+const discountRuleRoutes = require("./routes/discountRuleRoutes");
 const authenticateToken = require("./middleware/authMiddleware");
-const { getMe }       = require("./controllers/authController");
+const { getMe }         = require("./controllers/authController");
 
 const app  = express();
 const PORT = process.env.PORT || 5000;
@@ -44,7 +46,16 @@ app.use("/api/auth", authRoutes);
 // authMiddleware verifies the JWT before getMe runs
 app.get("/api/me", authenticateToken, getMe);
 
-// ─── Future route groups (mounted here as Tasks are completed) ────────────────
+// ─── Phase 3 routes ──────────────────────────────────────────────────────────
+
+// GET /api/products  GET /api/products/:id
+// POST /api/products   PUT /api/products/:id
+app.use("/api/products", productRoutes);
+
+// GET /api/admin/discount-rules   PUT /api/admin/discount-rules
+app.use("/api/admin/discount-rules", discountRuleRoutes);
+
+// ─── Future route groups (uncomment as tasks are completed) ──────────────────
 // app.use("/api/products",            authenticateToken, productRoutes);
 // app.use("/api/quotations",          authenticateToken, quotationRoutes);
 // app.use("/api/approvals",           authenticateToken, approvalRoutes);

@@ -20,10 +20,6 @@ export function ProtectedRoute({ children, allowedRoles, customerOnly }: Protect
     return <Navigate to="/dashboard" replace />
   }
 
-  if (!customerOnly && user?.role === 'Customer') {
-    return <Navigate to="/customer/quotation" replace />
-  }
-
   if (allowedRoles && user && !allowedRoles.includes(user.role)) {
     return <Navigate to="/dashboard" replace />
   }

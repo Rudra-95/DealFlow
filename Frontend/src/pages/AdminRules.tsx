@@ -41,8 +41,7 @@ export function AdminRules() {
     success('Configuration reset to defaults.')
   }
 
-  async function handleSave(e: React.FormEvent) {
-    e.preventDefault()
+  async function handleSave() {
     setSaving(true)
     await new Promise((r) => setTimeout(r, 800))
     setSaving(false)
@@ -67,7 +66,7 @@ export function AdminRules() {
         }
       />
 
-      <form onSubmit={handleSave}>
+      <form onSubmit={(e) => { e.preventDefault(); void handleSave() }}>
         <div className="config-grid">
           <section className="panel config-panel">
             <div className="panel-heading">

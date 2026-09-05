@@ -2224,3 +2224,35 @@ tbody tr:hover {
   .content { padding-top: 32px; }
   .sidebar { box-shadow: 14px 0 34px rgba(41, 36, 92, 0.28); }
 }
+
+/* Final cascade: matte shell and shared atmospheric canvas. */
+.app-shell {
+  background:
+    linear-gradient(112deg, rgba(255, 255, 255, 0.62) 0%, rgba(255, 255, 255, 0) 31%),
+    linear-gradient(248deg, rgba(232, 223, 246, 0.36) 0%, rgba(232, 223, 246, 0) 39%),
+    linear-gradient(164deg, #fbf9f5 0%, #f5f0ea 48%, #f8f5f1 100%);
+}
+.app-shell::before {
+  background:
+    radial-gradient(ellipse 42rem 18rem at 78% 8%, rgba(244, 231, 185, 0.2), transparent 72%),
+    radial-gradient(ellipse 34rem 24rem at 28% 94%, rgba(216, 204, 235, 0.18), transparent 74%),
+    linear-gradient(105deg, rgba(255, 255, 255, 0.18), transparent 52%);
+}
+.sidebar {
+  background:
+    linear-gradient(180deg, rgba(81, 70, 216, 0.22) 0%, rgba(81, 70, 216, 0) 32%),
+    #29245c;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+.topbar {
+  background: #fffdfa;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+.nav-link svg { color: #bcb9dc; }
+.nav-link:hover svg { color: #f1d87c; }
+.nav-link.active svg { color: #29245c; }
+.top-actions .icon-button { color: #6f6689; }
+.top-actions .icon-button:hover { color: #4338ca; background: #f0edff; }
+.top-avatar { color: #fff; background: #29245c; }

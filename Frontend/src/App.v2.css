@@ -684,3 +684,449 @@ body,
   .messages-list { max-height: 300px; }
   .msg-bubble { max-width: 92%; }
 }
+
+/* ── DealFlow360 brand mark (shared: sidebar + auth) ── */
+.auth-brand .brand-mark,
+.mobile-auth-brand .brand-mark {
+  width: 40px;
+  height: 40px;
+  flex: 0 0 40px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border-radius: 11px;
+  background: linear-gradient(145deg, #6b61ed 0%, #4438c6 100%);
+  color: #fff;
+  box-shadow: 0 6px 18px rgba(14, 23, 61, 0.26), inset 0 1px 0 rgba(255,255,255,0.16);
+  line-height: 1;
+}
+
+.auth-brand .brand-mark-main,
+.mobile-auth-brand .brand-mark-main {
+  display: block;
+  font-family: Manrope, sans-serif;
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: -0.05em;
+  line-height: 17px;
+}
+
+.auth-brand .brand-mark-sub,
+.mobile-auth-brand .brand-mark-sub {
+  display: block;
+  margin-top: 2px;
+  font-family: Manrope, sans-serif;
+  font-size: 7px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  line-height: 7px;
+  opacity: 0.88;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   DEALFLOW360 — AUTH PAGE  (single authoritative definition)
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── Page shell ─────────────────────────────────────────────── */
+
+.auth-page {
+  display: grid;
+  /* Left panel slightly narrower so card has room to bridge */
+  grid-template-columns: 46% 54%;
+  min-height: 100vh;
+  overflow: hidden;
+  background: #f7f4ef;
+}
+
+/* ── LEFT — brand / story panel ─────────────────────────────── */
+
+.auth-art {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  /* Comfortable padding — not so tight content stacks at edges */
+  padding: 40px 52px 40px 52px;
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse 460px 380px at 88% 78%,
+      rgba(92, 82, 200, 0.30),
+      transparent 64%),
+    linear-gradient(150deg, #242062 0%, #28245e 52%, #201c4c 100%);
+}
+
+/* Concentric ring motif — lower-right quadrant, behind content */
+.auth-art::before {
+  content: "";
+  position: absolute;
+  width: 560px;
+  height: 560px;
+  right: -240px;
+  bottom: -260px;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 50%;
+  box-shadow:
+    0 0 0  84px rgba(255, 255, 255, 0.018),
+    0 0 0 168px rgba(255, 255, 255, 0.012),
+    0 0 0 252px rgba(255, 255, 255, 0.007);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Small accent ring — upper-left quadrant */
+.auth-art::after {
+  content: "";
+  position: absolute;
+  width: 200px;
+  height: 200px;
+  left: -110px;
+  top: 35%;
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Brand lockup — pinned to top */
+.auth-brand {
+  position: relative;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  flex-shrink: 0;
+  padding: 0;
+  color: #fff;
+}
+
+.auth-brand strong {
+  color: #fff;
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.auth-brand .brand-mark {
+  width: 40px;
+  height: 40px;
+  flex: 0 0 40px;
+}
+
+/* Hero content — fills remaining height, genuinely centred */
+.auth-art-content {
+  position: relative;
+  z-index: 3;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  /* True centre — not bottom-biased */
+  justify-content: center;
+  /* Equal visual breathing room top and bottom */
+  padding: 0;
+  /* Small upward nudge keeps headline from feeling low */
+  margin-top: -20px;
+}
+
+.auth-quote {
+  max-width: 440px;
+}
+
+.auth-sparkle {
+  display: block;
+  margin-bottom: 18px;
+  color: #f2d97c;
+  filter: drop-shadow(0 4px 8px rgba(242, 217, 124, 0.20));
+}
+
+/* Hero headline */
+.auth-quote h1 {
+  margin: 0 0 14px;
+  color: #fff;
+  font-size: clamp(36px, 3.4vw, 52px);
+  font-weight: 800;
+  line-height: 1.04;
+  letter-spacing: -0.046em;
+  max-width: 420px;
+}
+
+.auth-quote p {
+  max-width: 390px;
+  margin: 0;
+  color: rgba(218, 228, 246, 0.70);
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+/* Feature list */
+.auth-feature-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: 400px;
+  margin-top: 28px;
+}
+
+.auth-feature {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  color: rgba(220, 230, 248, 0.72);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.auth-feature-dot {
+  width: 6px;
+  height: 6px;
+  flex: 0 0 6px;
+  margin-top: 4px;
+  border-radius: 50%;
+  background: #f2d97c;
+  box-shadow: 0 0 0 4px rgba(242, 217, 124, 0.10);
+}
+
+/* ── RIGHT — auth panel ──────────────────────────────────────── */
+
+/*
+  The right panel is the full-height beige zone.
+  We use padding-left to push the card away from the left edge,
+  giving room for the card's left edge to visually sit on the
+  boundary line between the two panels.
+*/
+/*
+  Right panel: centred, no overlap tricks.
+*/
+.auth-form {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 32px 40px;
+  background:
+    radial-gradient(ellipse 420px 340px at 80% 16%,
+      rgba(218, 208, 240, 0.20),
+      transparent 68%),
+    #f7f4ef;
+}
+
+.auth-form-inner {
+  position: relative;
+  z-index: 4;
+  width: 100%;
+  max-width: 100%;
+  transform: none;
+  box-sizing: border-box;
+  padding: 36px 64px 32px;
+  border: 1px solid rgba(220, 212, 202, 0.86);
+  border-radius: 20px;
+  background: #fffdfb;
+  box-shadow:
+    0 20px 50px rgba(36, 28, 62, 0.11),
+    0  4px 14px rgba(36, 28, 62, 0.06);
+}
+
+/* ── Card typography hierarchy ───────────────────────────────── */
+
+.auth-form-inner .brand-name {
+  display: block;
+  margin: 0 0 20px;
+  color: #29245c;
+  font-size: 17px;
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  font-family: Manrope, sans-serif;
+}
+
+.auth-form-inner .brand-name-highlight {
+  color: #5146d8;
+}
+
+.auth-form-inner .eyebrow {
+  display: block;
+  margin-bottom: 4px;
+  color: #9b93c4;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+}
+
+.auth-form-inner h1 {
+  margin: 0 0 5px;
+  color: #29245c;
+  font-size: 25px;
+  font-weight: 800;
+  line-height: 1.14;
+  letter-spacing: -0.032em;
+}
+
+.auth-form-inner .auth-subtitle {
+  margin: 0 0 20px;
+  color: #9099a8;
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.auth-form-inner form {
+  margin-top: 0;
+}
+
+.auth-form-inner label:not(.checkbox) {
+  display: block;
+  margin-bottom: 13px;
+  color: #59697d;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+/* Inputs */
+.auth-form-inner .input-wrap input {
+  height: 43px;
+  font-size: 13px;
+  box-sizing: border-box;
+}
+
+/* Primary CTA */
+.auth-form-inner .auth-submit {
+  height: 45px;
+  margin-top: 5px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+/* Divider */
+.auth-form-inner .auth-divider {
+  margin: 16px 0 11px;
+}
+
+/* Demo grid — compact 2×2 */
+.auth-form-inner .demo-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+
+.auth-form-inner .demo-pill {
+  min-height: 50px;
+  padding: 8px 10px;
+}
+
+.auth-form-inner .demo-pill strong {
+  font-size: 10.5px;
+}
+
+.auth-form-inner .demo-pill small {
+  font-size: 9px;
+}
+
+.auth-form-inner .auth-hint {
+  margin-top: 8px;
+}
+
+.auth-form-inner .auth-signup {
+  margin-top: 14px;
+  font-size: 11px;
+}
+
+/* ── Mobile brand strip ──────────────────────────────────────── */
+
+.mobile-auth-brand {
+  display: none;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 24px;
+  color: var(--navy);
+}
+
+.mobile-auth-brand strong {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--navy);
+}
+
+/* ── Responsive ≤900px — single column ──────────────────────── */
+
+@media (max-width: 900px) {
+  .auth-page {
+    grid-template-columns: 1fr;
+    min-height: auto;
+    overflow: visible;
+  }
+
+  .auth-art {
+    min-height: auto;
+    padding: 30px 24px 36px;
+  }
+
+  .auth-art-content {
+    margin-top: 0;
+    padding: 24px 0 0;
+  }
+
+  .auth-quote h1 {
+    font-size: clamp(26px, 7vw, 36px);
+  }
+
+  .auth-quote p {
+    font-size: 12px;
+  }
+
+  .auth-feature-list {
+    margin-top: 20px;
+    gap: 9px;
+  }
+
+  .auth-form {
+    min-height: auto;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 28px 16px 48px;
+    background: #f7f4ef;
+  }
+
+  .auth-form-inner {
+    width: 100%;
+    max-width: 520px;
+    margin: 0 auto;
+    padding: 28px 24px 24px;
+    border-radius: 16px;
+    box-shadow:
+      0 14px 36px rgba(36, 28, 62, 0.09),
+      0  3px 10px rgba(36, 28, 62, 0.05);
+  }
+
+  .mobile-auth-brand {
+    display: flex;
+  }
+
+  /* On mobile the card shows the mobile brand strip — hide the inline wordmark */
+  .auth-form-inner .brand-name {
+    display: none;
+  }
+
+  .auth-form-inner h1 {
+    font-size: 22px;
+  }
+
+  .auth-form-inner .auth-subtitle {
+    margin-bottom: 16px;
+  }
+
+  .auth-form-inner .demo-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+/* Very narrow — stack demo pills */
+@media (max-width: 400px) {
+  .auth-form-inner {
+    padding: 24px 18px 20px;
+  }
+  .auth-form-inner .demo-grid {
+    grid-template-columns: 1fr;
+  }
+}

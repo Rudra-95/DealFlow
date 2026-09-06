@@ -99,7 +99,8 @@ app.use("/api/admin/discount-rules", discountRuleRoutes);
 // ─── Phase 4/5/6 routes ──────────────────────────────────────────────────────────
 
 // Quotes + lines + submit + approval workflow actions
-app.use("/api/quotes", quoteRoutes);
+// SHARED CONTRACT: /api/quotations (not /api/quotes)
+app.use("/api/quotations", quoteRoutes);
 
 // GET /api/approvals/pending  (Manager / Finance queue)
 app.use("/api/approvals", approvalRoutes);
